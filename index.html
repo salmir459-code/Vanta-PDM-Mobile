@@ -217,6 +217,28 @@ nav.tabs button.on{color:var(--accent-t)}
 .pvmsg a{color:#FF8A73}
 
 .toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:#22272F;color:#E8EAED;padding:10px 14px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+
+/* Formulare */
+.fgrid{display:grid;gap:12px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld>span{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.fld input,.fld select,.fld textarea{font:inherit;font-size:16px;color:var(--text);background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+.fld textarea{min-height:84px;resize:vertical}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+.frow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.frow.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fcalc{background:var(--s2);border-radius:10px;padding:10px 12px;font-family:var(--mono);font-size:15px;display:flex;justify-content:space-between;gap:8px}
+.ferr{color:var(--err);font-size:14px;font-weight:600}
+.fhint{font-size:13px;color:var(--muted)}
+.btn.danger{background:transparent;color:var(--err);border:1px solid var(--err)}
+.btn.danger.on{background:var(--err);color:#fff}
+.kpos{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:10px;display:grid;gap:8px}
+.kpos .kh{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);font-family:var(--mono)}
+.kpos .frow{grid-template-columns:1fr 1fr 1.2fr}
+.pend{color:var(--warn)!important}
+button.entry{width:100%;text-align:left}
+button.entry:active{background:var(--s2)}
+.hbtn.acc{color:var(--accent-t)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -227,6 +249,7 @@ nav.tabs button.on{color:var(--accent-t)}
 </div>
 <nav class="tabs"><div class="in" id="tabs"></div></nav>
 <div id="sheet" class="overlay" hidden></div>
+<div id="form" class="overlay" hidden></div>
 <div id="pv" class="pv" hidden></div>
 <div id="toast" class="toast" hidden role="status"></div>
 
@@ -238,10 +261,11 @@ nav.tabs button.on{color:var(--accent-t)}
 // über die erlaubte Adresse (salmir459-code.github.io) in Google Cloud.
 const CFG={
   clientId:'166896336792-dj1q2nkufpbb4ir6htrbjbj3muldansg.apps.googleusercontent.com',
-  scopes:['https://www.googleapis.com/auth/drive.readonly','https://www.googleapis.com/auth/drive.appdata'],
+  scopes:['https://www.googleapis.com/auth/drive.readonly','https://www.googleapis.com/auth/drive.appdata','https://www.googleapis.com/auth/drive.file'],
+  changesName:'mobile_changes.json',
   settingsName:'vanta_mobile.json'
 };
-const VERSION='Mobil 1.0';
+const VERSION='Mobil 2.0';
 const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 const PDFJS_W='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const FOLDER='application/vnd.google-apps.folder';
@@ -263,6 +287,8 @@ const ICON={
   dokument:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>',
   link:'<path d="M9 15l6-6"/><path d="M11 6l.46-.54a5 5 0 0 1 7.07 7.08L18 13"/><path d="M13 18l-.4.53a5.07 5.07 0 0 1-7.12 0 4.97 4.97 0 0 1 0-7.07L6 11"/>',
   plus:'<path d="M12 5v14"/><path d="M5 12h14"/>',
+  stift:'<path d="M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/>',
+  papierkorb:'<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',
   minus:'<path d="M5 12h14"/>',
   breite:'<path d="M3 12h18"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/>',
   extern:'<path d="M12 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/><path d="M11 13l9-9"/><path d="M15 4h5v5"/>',
@@ -286,9 +312,12 @@ let toastT;function toast(msg){const t=document.getElementById('toast');t.textCo
 // ════════════ Zustand ════════════
 let DATA=LS.get('vanta_data');          // pdm_projects.json (Zwischenspeicher auf dem Handy)
 let META=LS.get('vanta_meta')||{};      // {name, loadedAt, modifiedTime}
-let SET=Object.assign({dataFileId:'',dataFileName:'',links:{},theme:'system',accent:'rot'},LS.get('vanta_settings')||{});
+let SET=Object.assign({dataFileId:'',dataFileName:'',dataParentId:'',changesId:'',links:{},theme:'system',accent:'rot'},LS.get('vanta_settings')||{});
 let AUTH=LS.get('vanta_auth')||{};      // {token, exp, email, name}
 let remoteSettingsId=null;
+let OPS=LS.get('vanta_ops')||[];          // Änderungen vom Handy (alle, auch schon hochgeladene)
+let OPS_DIRTY=!!LS.get('vanta_ops_dirty'); // true = noch nicht auf Drive
+let VIEW=null;                            // DATA + noch nicht übernommene Handy-Änderungen
 
 function applyTheme(){
   const r=document.documentElement;
@@ -320,7 +349,7 @@ function signIn(){
 async function onToken(r){
   if(!r||r.error){toast('Anmeldung fehlgeschlagen: '+(r&&r.error||'unbekannt'));return}
   if(!google.accounts.oauth2.hasGrantedAllScopes(r,...CFG.scopes)){
-    toast('Bitte beide Häkchen im Google-Fenster setzen, sonst kann die App deine Dateien nicht lesen.');
+    toast('Bitte alle Häkchen im Google-Fenster setzen. Sonst kann die App deine Dateien nicht lesen oder Einträge nicht speichern.');
   }
   AUTH.token=r.access_token;AUTH.exp=Date.now()+(+r.expires_in||3600)*1000;LS.set('vanta_auth',AUTH);
   try{const a=await api('about',{fields:'user(displayName,emailAddress)'});AUTH.email=a.user.emailAddress;AUTH.name=a.user.displayName;LS.set('vanta_auth',AUTH)}catch(e){}
@@ -420,22 +449,123 @@ async function loadData(silent){
   if(!SET.dataFileId||loadingData)return;
   loadingData=true;if(!silent)render();
   try{
-    const m=await api('files/'+SET.dataFileId,{fields:'id,name,modifiedTime,trashed',supportsAllDrives:'true'});
+    const m=await api('files/'+SET.dataFileId,{fields:'id,name,modifiedTime,trashed,parents',supportsAllDrives:'true'});
+    if(m.parents&&m.parents[0]&&SET.dataParentId!==m.parents[0]){SET.dataParentId=m.parents[0];SET.changesId='';saveSettings()}
     if(m.trashed)throw new Error('Die Datei liegt im Papierkorb.');
     const txt=new TextDecoder().decode(await download(SET.dataFileId));
     const o=JSON.parse(txt);
     if(!o||!Array.isArray(o.kunden))throw new Error('Die Datei ist keine pdm_projects.json (die Liste „kunden“ fehlt).');
     DATA=o;META={name:m.name,loadedAt:Date.now(),modifiedTime:m.modifiedTime};
     LS.set('vanta_data',DATA);LS.set('vanta_meta',META);
+    pruneOps();rebuildView();
     if(!silent)toast('Daten aktualisiert.');
+    syncOps();
   }catch(e){
     if(e instanceof AuthErr)toast('Anmeldung abgelaufen. Bitte neu anmelden.');
     else toast('Laden fehlgeschlagen: '+e.message);
   }finally{loadingData=false;render()}
 }
 
+
+// ════════════ Änderungen vom Handy ════════════
+// Das Handy schreibt NIE in pdm_projects.json. Jede Änderung wird ein Auftrag
+// in mobile_changes.json (neben pdm_projects.json). Der PC arbeitet sie ein
+// und vermerkt die Nummern in pdm_projects.json unter „mobil_uebernommen“.
+const newId=()=>{const a=new Uint8Array(4);crypto.getRandomValues(a);return [...a].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase()};
+const opId=()=>'M'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+newId();
+function appliedSet(){const s=new Set(((DATA&&DATA.mobil_uebernommen)||[]).map(String));((DATA&&DATA.mobil_konflikte)||[]).forEach(k=>k&&s.add(String(k.op_id)));return s}
+function pendingOps(){const a=appliedSet();return OPS.filter(o=>!a.has(String(o.op_id)))}
+function pruneOps(){const a=appliedSet(),n=OPS.length;OPS=OPS.filter(o=>!a.has(String(o.op_id)));if(OPS.length!==n){OPS_DIRTY=true;LS.set('vanta_ops',OPS);LS.set('vanta_ops_dirty',true)}}
+function stundenAus(von,bis,pause){
+  const m1=/^(\d{1,2}):(\d{2})$/.exec(von||''),m2=/^(\d{1,2}):(\d{2})$/.exec(bis||'');
+  if(!m1||!m2)return null;
+  let min=(+m2[1]*60+ +m2[2])-(+m1[1]*60+ +m1[2])-(+pause||0);if(min<0)min+=1440;
+  return Math.round(min/60*100)/100;
+}
+function vFind(v,kid,pid,tid,eid){
+  const r={};r.k=(v.kunden||[]).find(k=>String(k.id)===String(kid));
+  if(pid!=null){for(const k of [r.k,...(v.kunden||[])].filter(Boolean)){const p=(k.projekte||[]).find(p=>String(p.id)===String(pid));if(p){r.k=k;r.p=p;break}}}
+  if(r.p&&tid!=null)r.t=(r.p.tasks||[]).find(t=>String(t.id)===String(tid));
+  if(r.t&&eid!=null)r.e=(r.t.zeiteintraege||[]).find(e=>String(e.id)===String(eid));
+  return r;
+}
+// Dieselben Regeln wie mobil_sync.py am PC, nur ohne Konfliktprüfung (Anzeige)
+function applyOp(v,o){
+  const f=vFind(v,o.kunde_id,o.projekt_id,o.task_id,o.eintrag_id);
+  switch(o.typ){
+    case 'kunde_neu':if(!vFind(v,o.kunde.id).k)(v.kunden=v.kunden||[]).push(Object.assign({projekte:[]},o.kunde,{_m:1}));break;
+    case 'kunde_aendern':if(f.k)Object.assign(f.k,o.neu,{_m:1});break;
+    case 'projekt_neu':if(f.k&&!vFind(v,null,o.projekt.id).p)(f.k.projekte=f.k.projekte||[]).push(Object.assign({tasks:[],zahlungen:[]},o.projekt,{_m:1}));break;
+    case 'projekt_aendern':if(f.p)Object.assign(f.p,o.neu,{_m:1});break;
+    case 'task_neu':if(f.p&&!(f.p.tasks||[]).some(t=>t.id===o.task.id))(f.p.tasks=f.p.tasks||[]).push(Object.assign({zeiteintraege:[]},o.task,{_m:1}));break;
+    case 'task_aendern':if(f.t)Object.assign(f.t,o.neu,{_m:1});break;
+    case 'kalkulation_setzen':if(f.p)f.p.kalkulation={stand:new Date().toLocaleDateString('de-AT'),positionen:JSON.parse(JSON.stringify(o.positionen)),_m:1};break;
+    case 'zeit_neu':if(f.t&&!(f.t.zeiteintraege||[]).some(e=>e.id===o.eintrag.id))(f.t.zeiteintraege=f.t.zeiteintraege||[]).push(Object.assign({},o.eintrag,{_m:1}));break;
+    case 'zeit_aendern':if(f.e){Object.assign(f.e,o.neu,{_m:1});const h=f.e.von&&f.e.bis&&f.e.von!==f.e.bis?stundenAus(f.e.von,f.e.bis,f.e.pause_min):null;if(h!=null)f.e.stunden=h}break;
+    case 'zeit_loeschen':if(f.t&&f.e)f.t.zeiteintraege=f.t.zeiteintraege.filter(e=>e!==f.e);break;
+  }
+}
+function rebuildView(){
+  if(!DATA){VIEW=null;return}
+  VIEW=JSON.parse(JSON.stringify(DATA));
+  pendingOps().slice().sort((a,b)=>String(a.zeit).localeCompare(String(b.zeit))).forEach(o=>{try{applyOp(VIEW,o)}catch(e){console.warn('Änderung',o,e)}});
+}
+function addOps(list){
+  const now=Date.now();
+  list.forEach((o,i)=>{o.op_id=opId();o.zeit=new Date(now+i).toISOString();o.quelle='handy';OPS.push(o)});
+  OPS_DIRTY=true;LS.set('vanta_ops',OPS);LS.set('vanta_ops_dirty',true);
+  rebuildView();render();
+  if(tokenValid())syncOps();else toast('Auf dem Handy gespeichert. Hochgeladen wird, sobald du angemeldet bist.');
+}
+let syncing=false,syncAgain=false;
+async function syncOps(){
+  if(!tokenValid()||!SET.dataParentId)return;
+  if(syncing){syncAgain=true;return}
+  syncing=true;
+  try{
+    let remote=[];
+    if(!SET.changesId){
+      const r=await api('files',Object.assign({q:`'${SET.dataParentId}' in parents and name='${CFG.changesName}' and trashed=false`,fields:'files(id)',pageSize:'5'},SHARED));
+      if(r.files&&r.files[0]){SET.changesId=r.files[0].id;saveSettings()}
+    }
+    if(SET.changesId){
+      try{const o=JSON.parse(new TextDecoder().decode(await download(SET.changesId)));remote=Array.isArray(o.ops)?o.ops:[]}
+      catch(e){if(e instanceof AuthErr)throw e;if(/not found/i.test(e.message)){SET.changesId='';saveSettings()}}
+    }
+    const a=appliedSet(),map=new Map();
+    [...remote,...OPS].forEach(o=>{if(o&&o.op_id&&!a.has(String(o.op_id)))map.set(o.op_id,o)});
+    const merged=[...map.values()].sort((x,y)=>String(x.zeit).localeCompare(String(y.zeit)));
+    const same=remote.length===merged.length&&remote.every((o,i)=>o.op_id===merged[i].op_id);
+    if(!same||!SET.changesId){
+      if(!merged.length&&!SET.changesId){/* nichts zu tun */}
+      else{
+        const body=JSON.stringify({version:1,hinweis:'Geschrieben von Vanta PDM Mobil. Bitte nicht von Hand ändern.',geaendert:new Date().toISOString(),ops:merged},null,1);
+        if(SET.changesId){
+          await api('files/'+SET.changesId,{uploadType:'media'},{upload:true,method:'PATCH',headers:{'Content-Type':'application/json'},body});
+        }else{
+          const b='vanta'+Math.random().toString(36).slice(2);
+          const meta=JSON.stringify({name:CFG.changesName,parents:[SET.dataParentId],mimeType:'application/json'});
+          const multi=`--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${b}--`;
+          const r=await api('files',Object.assign({uploadType:'multipart',fields:'id'},{supportsAllDrives:'true'}),{upload:true,method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body:multi});
+          SET.changesId=r.id;saveSettings();
+        }
+      }
+    }
+    OPS=merged;OPS_DIRTY=false;LS.set('vanta_ops',OPS);LS.set('vanta_ops_dirty',false);
+    rebuildView();
+  }catch(e){
+    OPS_DIRTY=true;LS.set('vanta_ops_dirty',true);
+    if(e instanceof AuthErr)toast('Anmeldung abgelaufen. Deine Einträge bleiben auf dem Handy, bis du dich neu anmeldest.');
+    else if(/insufficient|permission|scope/i.test(e.message))toast('Die App darf noch nicht speichern. Bitte abmelden, neu anmelden und alle Häkchen setzen.');
+    else toast('Hochladen fehlgeschlagen: '+e.message+'. Die Einträge bleiben auf dem Handy.');
+  }finally{
+    syncing=false;render();
+    if(syncAgain){syncAgain=false;syncOps()}
+  }
+}
+
 // ════════════ Daten-Auswertung ════════════
-const K=()=>(DATA&&DATA.kunden)||[];
+const K=()=>(VIEW&&VIEW.kunden)||[];
 function projHours(p){let h=0;(p.tasks||[]).forEach(t=>(t.zeiteintraege||[]).forEach(z=>h+=+z.stunden||0));return h}
 function projMenge(p){let v=0;(p.tasks||[]).forEach(t=>{if(t.art==='menge'&&!t.in_pauschale)v+=(+t.menge||0)*(+t.vk||0)});return v}
 function projValue(p,k){if(p.abrechnungstyp==='pauschal')return +p.pauschalpreis||0;return projHours(p)*(+p.stundensatz||+k.stundensatz||0)+projMenge(p)}
@@ -473,6 +603,7 @@ window.addEventListener('popstate',()=>{
   if(ignorePops>0){ignorePops--;return}
   if(!document.getElementById('pv').hidden){closePdf();return}
   if(!document.getElementById('sheet').hidden){sheetBack();return}
+  if(!document.getElementById('form').hidden){formHide();return}
   if(stack.length>1){stack.pop();render(true)}
 });
 function setTab(t){tab=t;stack=[{v:t}];render(true)}
@@ -484,6 +615,11 @@ function header(title,sub,right){
   const b=stack.length>1?`<button class="back" data-act="back" aria-label="Zurück">${ic('back')}</button>`:'';
   const brand=stack.length===1&&tab==='start'?`<span class="brand">V</span>`:'';
   document.getElementById('top').innerHTML=`${b}${brand}<h1>${sub?`<span class="sub">${esc(sub)}</span>`:''}${esc(title)}</h1>${right||''}`;
+}
+const hBtn=(act,icon,label)=>`<button class="hbtn acc" data-act="${act}" aria-label="${label}">${ic(icon,'s')}</button>`;
+function pendingBanner(){
+  const n=pendingOps().length;if(!n&&!OPS_DIRTY)return '';
+  return `<div class="banner" style="border-left-color:var(--accent)"><div class="main"><b>${n} Änderung${n===1?'':'en'} vom Handy</b><div class="note">${OPS_DIRTY?'Noch nicht hochgeladen – bitte anmelden.':'Liegen auf Drive. Der PC übernimmt sie, sobald Vanta PDM dort läuft.'}</div></div>${OPS_DIRTY?'<button class="btn small" data-act="syncnow">Hochladen</button>':''}</div>`;
 }
 const refreshBtn=()=>SET.dataFileId?`<button class="hbtn" data-act="reload" aria-label="Daten neu laden">${loadingData?'<span class="spin"></span>':ic('neu','s')}</button>`:'';
 
@@ -509,7 +645,7 @@ function welcome(){
 function projRow(k,p,ki,pi,showKunde){
   return `<button class="row" data-go="projekt" data-ki="${ki}" data-pi="${pi}">
     <div class="main"><div class="t">${esc(one(p.name))}</div>
-    <div class="m"><span class="tag">${esc(p.nummer||'—')}</span>${showKunde?`<span>${esc(k.name)}</span>`:''}${isActive(p.status)?'<span class="pill aktiv">aktiv</span>':''}${SET.links[pkey(k,p)]?`<span style="color:var(--ok);display:inline-flex">${ic('dokument','s')}</span>`:''}</div></div>
+    <div class="m"><span class="tag">${esc(p.nummer||'—')}</span>${showKunde?`<span>${esc(k.name)}</span>`:''}${isActive(p.status)?'<span class="pill aktiv">aktiv</span>':''}${p._m?'<span class="pill pend">Handy</span>':''}${SET.links[pkey(k,p)]?`<span style="color:var(--ok);display:inline-flex">${ic('dokument','s')}</span>`:''}</div></div>
     <div class="r"><span class="num">${hrs(projHours(p))}</span><small class="num">${eur0(projValue(p,k))}</small></div>${ic('chev','s chev')}</button>`;
 }
 function entryRow(e){
@@ -529,11 +665,12 @@ function vStart(){
   const uj=allPayments().filter(x=>x.d.getFullYear()===now.getFullYear()).reduce((a,x)=>a+(+x.z.betrag||0),0);
   const act=[];K().forEach((k,ki)=>(k.projekte||[]).forEach((p,pi)=>{if(isActive(p.status))act.push({k,p,ki,pi,l:lastDate(p)})}));
   act.sort((a,b)=>b.l-a.l);
-  return `${authBanner()}<div class="kpis">
-    <div class="kpi"><small>Diese Woche</small><div class="v">${h1(hw)}<u>h</u></div></div>
+  return `${authBanner()}${pendingBanner()}<div class="kpis">
+    <div class="kpi"><small>Woche</small><div class="v">${h1(hw)}<u>h</u></div></div>
     <div class="kpi"><small>${MON[now.getMonth()]}</small><div class="v">${h1(hm)}<u>h</u></div></div>
-    <div class="kpi"><small>Umsatz ${now.getFullYear()}</small><div class="v">${eur0(uj).replace(' €','')}<u>€</u></div></div>
+    <div class="kpi"><small>Umsatz</small><div class="v">${eur0(uj).replace(' €','')}<u>€</u></div></div>
   </div>
+  <button class="btn" data-act="newzeit">${ic('plus','s')}Zeit erfassen</button>
   <section class="sec"><h2>Aktive Projekte <span>${act.length}</span></h2>
     <div class="list">${act.map(a=>projRow(a.k,a.p,a.ki,a.pi,true)).join('')||'<div class="empty">Keine aktiven Projekte.</div>'}</div></section>
   <section class="sec"><h2>Letzte Zeiteinträge</h2>
@@ -541,7 +678,7 @@ function vStart(){
 }
 
 function vKunden(){
-  header('Kunden','',refreshBtn());
+  header('Kunden','',(DATA?hBtn('newkunde','plus','Neuer Kunde'):'')+refreshBtn());
   if(!DATA)return welcome();
   const q=ui.kundenQ.toLowerCase();
   const rows=K().map((k,ki)=>{
@@ -559,12 +696,13 @@ function vKunden(){
 
 function vKunde(ki){
   const k=K()[ki];
-  header(k.name,'Kunde');
+  header(k.name,'Kunde',hBtn('editkunde','stift','Kunde bearbeiten'));
   const ps=(k.projekte||[]).map((p,pi)=>({p,pi,l:lastDate(p)}));
   const act=ps.filter(x=>isActive(x.p.status)).sort((a,b)=>b.l-a.l),done=ps.filter(x=>!isActive(x.p.status)).sort((a,b)=>b.l-a.l);
   const h=ps.reduce((s,x)=>s+projHours(x.p),0),paid=ps.reduce((s,x)=>s+projPaid(x.p),0);
-  return `<div class="stats"><div><small>Stundensatz</small><span class="num">${eur(k.stundensatz)}</span></div><div><small>Projekte</small><span class="num">${ps.length}</span></div>
+  return `${k._m?'<p class="note pend">Am Handy angelegt oder geändert · noch nicht am PC</p>':''}<div class="stats"><div><small>Stundensatz</small><span class="num">${eur(k.stundensatz)}</span></div><div><small>Projekte</small><span class="num">${ps.length}</span></div>
     <div><small>Stunden gesamt</small><span class="num">${hrs(h)}</span></div><div><small>Bezahlt gesamt</small><span class="num">${eur(paid)}</span></div></div>
+  <button class="btn ghost" data-act="newprojekt">${ic('plus','s')}Neues Projekt</button>
   ${act.length?`<section class="sec"><h2>Aktiv <span>${act.length}</span></h2><div class="list">${act.map(x=>projRow(k,x.p,ki,x.pi)).join('')}</div></section>`:''}
   ${done.length?`<section class="sec"><h2>Abgeschlossen <span>${done.length}</span></h2><div class="list">${done.map(x=>projRow(k,x.p,ki,x.pi)).join('')}</div></section>`:''}`;
 }
@@ -583,7 +721,7 @@ function zeichnungenSection(k,p){
 
 function vProjekt(ki,pi){
   const k=K()[ki],p=k.projekte[pi];
-  header(p.nummer||one(p.name),k.name);
+  header(p.nummer||one(p.name),k.name,hBtn('editprojekt','stift','Projekt bearbeiten'));
   const h=projHours(p),v=projValue(p,k),paid=projPaid(p),satz=+p.stundensatz||+k.stundensatz||0;
   const pauschal=p.abrechnungstyp==='pauschal',offen=v-paid,pinf=pathInfo(p.ordner);
   const tasks=(p.tasks||[]).map(t=>{
@@ -598,12 +736,12 @@ function vProjekt(ki,pi){
     return `<div class="task ${open?'open':''}"><button data-task-toggle="${esc(key)}" aria-expanded="${open}">
       <div class="main"><div class="t">${esc(t.name)}</div><div class="m"><span>${zs.length} Eintr${zs.length===1?'ag':'äge'}</span>${isActive(t.status)?'<span class="pill aktiv">aktiv</span>':'<span class="pill">abgeschlossen</span>'}</div></div>
       <span class="num">${hrs(th)}</span>${ic('chev','s')}</button>
-      <div class="entries">${zs.map(entryDetail).join('')||'<div class="empty" style="padding:6px 0">Keine Einträge.</div>'}</div></div>`;
+      <div class="entries">${zs.map(z=>entryDetail(z,{ki,pi,tid:t.id})).join('')||'<div class="empty" style="padding:6px 0">Keine Einträge.</div>'}</div></div>`;
   }).join('');
   const kal=p.kalkulation&&(p.kalkulation.positionen||[]).length?p.kalkulation:null;
   const kalSum=kal?kal.positionen.reduce((s,x)=>s+(+x.menge||0)*(+x.preis||0),0):0;
   const zahl=(p.zahlungen||[]).slice().sort((a,b)=>(pd(b.datum)||0)-(pd(a.datum)||0));
-  return `<div class="card phead">
+  return `${p._m?'<p class="note pend" style="margin:0 2px">Am Handy angelegt oder geändert · noch nicht am PC</p>':''}<div class="card phead">
     <div><div class="nr">${esc(p.nummer||'')}</div><h3>${esc(one(p.name))}</h3>
     <div class="m"><span class="pill ${isActive(p.status)?'aktiv':''}">${esc(p.status||'—')}</span><span>${pauschal?'Pauschal':'Stundensatz '+eur0(satz)+'/h'}</span>${p.rechnung_nr?`<span class="mono">Rg. ${esc(p.rechnung_nr)}${p.rechnung_pos?' / Pos. '+esc(p.rechnung_pos):''}</span>`:''}</div></div>
     <div class="stats"><div><small>Stunden</small><span class="num">${hrs(h)}</span></div><div><small>${pauschal?'Pauschale':'Wert'}</small><span class="num">${eur(v)}</span></div>
@@ -613,15 +751,16 @@ function vProjekt(ki,pi){
     ${pinf?`<div class="path ${pinf.cls}">${ic('ordner','s')}<div><div class="loc">${pinf.loc}</div><div class="p">${esc(pinf.p)}</div></div></div>`:''}
   </div>
   ${zeichnungenSection(k,p)}
-  <section class="sec"><h2>Tasks <span>${(p.tasks||[]).length}</span></h2><div class="list">${tasks||'<div class="empty">Keine Tasks.</div>'}</div></section>
-  ${kal?`<section class="sec"><h2>Kalkulation <span>Stand ${esc(kal.stand||'')}</span></h2><div class="list kalk">
+  <section class="sec"><h2>Tasks <button data-act="newzeit">+ Zeit erfassen</button></h2><div class="list">${tasks||'<div class="empty">Keine Tasks.</div>'}</div></section>
+  ${kal?`<section class="sec"><h2>Kalkulation <button data-act="editkalk">Bearbeiten</button></h2>${kal._m?'<p class="note pend" style="margin:0 2px">Am Handy geändert · noch nicht am PC</p>':`<p class="note" style="margin:0 2px">Stand ${esc(kal.stand||'')}</p>`}<div class="list kalk">
     ${kal.positionen.map(x=>`<div class="pos"><span>${esc(x.text)}</span><span class="q">${(+x.menge||0).toLocaleString('de-AT')} ${esc(x.einheit||'')} × ${eur(x.preis)}</span><span class="s">${eur((+x.menge||0)*(+x.preis||0))}</span></div>`).join('')}
-    <div class="sum"><span>Summe netto</span><span class="num">${eur(kalSum)}</span></div></div></section>`:''}
+    <div class="sum"><span>Summe netto</span><span class="num">${eur(kalSum)}</span></div></div></section>`:`<section class="sec"><h2>Kalkulation</h2><button class="btn ghost" data-act="editkalk">${ic('plus','s')}Kalkulation anlegen</button></section>`}
   <section class="sec"><h2>Zahlungen <span>${eur(paid)}</span></h2><div class="list">${zahl.map(z=>{const r=pathInfo(z.rechnung);return `<div class="row"><div class="main"><div class="t">${esc(z.kommentar||z.beschreibung||'Zahlung')}</div>
     <div class="m"><span class="mono">${esc(z.datum)}</span>${r?`<span style="color:var(--${r.cls==='drive'?'ok':'warn'})">${r.cls==='drive'?'Rechnung auf Drive':'Rechnung nur am PC'}</span>`:''}</div></div><div class="r"><span class="num">${eur(z.betrag)}</span></div></div>`}).join('')||'<div class="empty">Noch keine Zahlungen.</div>'}</div></section>`;
 }
-function entryDetail(z){
-  return `<div class="entry"><span class="d">${esc(String(z.datum||'').slice(0,6))}</span><span class="c">${esc(z.kommentar)||'<span style="color:var(--dim)">ohne Kommentar</span>'}</span><span class="h">${(+z.stunden||0).toFixed(2).replace('.',',')}</span>${z.von&&z.bis&&z.von!==z.bis?`<span class="vb">${esc(z.von)}–${esc(z.bis)}${z.pause_min?` · ${z.pause_min} min Pause`:''}</span>`:''}</div>`;
+function entryDetail(z,c){
+  const tag=c?'button':'div',attr=c?` data-ez="${c.ki}|${c.pi}|${esc(c.tid)}|${esc(z.id)}"`:'';
+  return `<${tag} class="entry"${attr}><span class="d">${esc(String(z.datum||'').slice(0,6))}</span><span class="c">${esc(z.kommentar)||'<span style="color:var(--dim)">ohne Kommentar</span>'}</span><span class="h">${(+z.stunden||0).toFixed(2).replace('.',',')}</span>${z.von&&z.bis&&z.von!==z.bis?`<span class="vb">${esc(z.von)}–${esc(z.bis)}${z.pause_min?` · ${z.pause_min} min Pause`:''}</span>`:''}${z._m?'<span class="vb pend">am Handy erfasst · noch nicht am PC</span>':''}</${tag}>`;
 }
 
 function vOrdner(s){header(s.name,s.title||'Ordner');return `<div class="list" data-folder="${esc(s.fid)}"></div>`}
@@ -637,7 +776,7 @@ function periodRange(){
   }
 }
 function vZeiten(){
-  header('Zeiten','',refreshBtn());
+  header('Zeiten','',(DATA?hBtn('newzeit','plus','Zeit erfassen'):'')+refreshBtn());
   if(!DATA)return welcome();
   const [from,to]=periodRange(),q=ui.zeitQ.toLowerCase();
   const kunden=[];let total=0;
@@ -673,7 +812,7 @@ function vZeiten(){
       return `<div class="task ${open?'open':''}"><button data-zeit-toggle="${esc(key)}" aria-expanded="${open}">
         <div class="main"><div class="t">${esc(one(x.p.name))}</div><div class="m"><span class="tag">${esc(x.p.nummer||'—')}</span><span>${x.es.length} Eintr${x.es.length===1?'ag':'äge'}</span>${x.act?'<span class="pill aktiv">aktiv</span>':''}</div></div>
         <span class="num">${hrs(x.h)}</span>${ic('chev','s')}</button>
-        <div class="entries">${x.es.map(e=>entryDetail(e.z)).join('')}
+        <div class="entries">${x.es.map(e=>entryDetail(e.z,{ki:g.ki,pi:x.pi,tid:e.t.id})).join('')}
         <button class="openp" data-go="projekt" data-ki="${g.ki}" data-pi="${x.pi}">Projekt öffnen ${ic('chev','s')}</button></div></div>`;
     }).join('')}</div></section>`).join('')||'<div class="list"><div class="empty">Keine Zeiteinträge im gewählten Zeitraum.</div></div>'}`;
 }
@@ -701,6 +840,11 @@ function vUmsatz(){
     <div class="m"><span class="mono">${esc(x.z.datum)}</span><span class="tag">${esc(x.p.nummer||'')}</span><span>${esc(x.k.name)}</span></div></div><div class="r"><span class="num">${eur(x.z.betrag)}</span></div></button>`).join('')||'<div class="empty">Keine Zahlungen.</div>'}</div></section>`;
 }
 
+function konfliktListe(){
+  const ks=((DATA&&DATA.mobil_konflikte)||[]).slice(-8).reverse();
+  if(!ks.length)return '';
+  return `<div><div class="kv" style="margin-bottom:6px"><span class="pend"><b>Nicht übernommen</b></span><span></span></div><div class="list">${ks.map(k=>`<div class="row"><div class="main"><div class="t wrap" style="font-weight:500;font-size:14px">${esc(k.grund)}</div><div class="m"><span class="mono">${esc(k.am||'')}</span></div></div></div>`).join('')}</div><p class="note" style="margin-top:6px">Diese Einträge bitte am PC von Hand nachtragen. Der PC hat nichts überschrieben.</p></div>`;
+}
 function vEinstellungen(){
   header('Einstellungen');
   const signed=tokenValid();
@@ -723,6 +867,14 @@ function vEinstellungen(){
       <button class="btn ${SET.dataFileId?'ghost':''}" data-act="pickdata" style="flex:1">${ic('dokument','s')}${SET.dataFileId?'Andere Datei':'pdm_projects.json auswählen'}</button>
       ${SET.dataFileId?`<button class="btn" data-act="reload" style="flex:1" ${loadingData?'disabled':''}>${ic('neu','s')}Neu laden</button>`:''}
     </div>
+  </div></section>
+
+  <section class="sec"><h2>Einträge vom Handy</h2><div class="card">
+    <div class="kv"><span>Warten auf den PC</span><span class="num">${pendingOps().length}</span></div>
+    <div class="kv"><span>Hochgeladen</span><span>${OPS_DIRTY?'<span class="pend">nein – wartet auf Anmeldung</span>':'ja'}</span></div>
+    ${OPS_DIRTY?'<button class="btn" data-act="syncnow">Jetzt hochladen</button>':''}
+    <p class="note">Was du hier einträgst, landet in <span class="mono">mobile_changes.json</span> neben deiner <span class="mono">pdm_projects.json</span>. Vanta PDM am PC übernimmt es automatisch und vermerkt es. Deine <span class="mono">pdm_projects.json</span> schreibt nur der PC.</p>
+    ${konfliktListe()}
   </div></section>
 
   <section class="sec"><h2>Verknüpfte Zeichnungsordner <span>${links.length}</span></h2><div class="list">
@@ -851,6 +1003,206 @@ let ignorePops=0;
 function closeSheet(){ // schließt komplett und räumt die Zurück-Schritte weg
   const n=SH?SH.depth:0;document.getElementById('sheet').hidden=true;SH=null;
   if(n>0){ignorePops++;history.go(-n)}
+}
+
+
+// ════════════ Formulare (Eingabe am Handy) ════════════
+let FM=null;
+const pad2=n=>String(n).padStart(2,'0');
+const isoToday=()=>{const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())};
+const deToIso=s=>{const m=/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(s||'');return m?`${m[3]}-${pad2(m[2])}-${pad2(m[1])}`:isoToday()};
+const isoToDe=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?`${m[3]}.${m[2]}.${m[1]}`:''};
+const numIn=v=>{let t=String(v??'').trim().replace(/\s|€/g,'');if(!t)return 0;if(t.includes(',')&&t.includes('.'))t=t.replace(/\./g,'');const n=parseFloat(t.replace(',','.'));return isFinite(n)?n:0};
+const numOut=v=>{const n=+v||0;return String(Math.round(n*1000)/1000).replace('.',',')};
+const hm=min=>{min=((min%1440)+1440)%1440;return pad2(Math.floor(min/60))+':'+pad2(min%60)};
+const isHourTask=t=>!t.art||t.art==='stunden';
+function ctxFromStack(){const s=stack[stack.length-1];return s.v==='projekt'?{ki:s.ki,pi:s.pi}:s.v==='kunde'?{ki:s.ki}:{}}
+function projectChoices(){
+  const out=[];K().forEach((k,ki)=>(k.projekte||[]).forEach((p,pi)=>out.push({ki,pi,k,p,act:isActive(p.status),l:lastDate(p)})));
+  return out.sort((a,b)=>(b.act-a.act)||(b.l-a.l));
+}
+function openForm(kind,ctx){
+  if(!VIEW){toast('Zuerst die Datendatei laden (Einstellungen).');return}
+  if(!SET.dataParentId){toast('Bitte unter Einstellungen einmal „Neu laden“ tippen, dann kann gespeichert werden.');return}
+  FM={kind,ctx:Object.assign({},ctx||{}),v:{},err:'',del:false};
+  const v=FM.v;
+  if(kind==='zeit'){
+    if(FM.ctx.ki==null){const c=projectChoices()[0];if(!c){toast('Noch kein Projekt vorhanden.');return}FM.chooser=true;v.proj=c.ki+':'+c.pi}
+    else v.proj=FM.ctx.ki+':'+FM.ctx.pi;
+    const e=FM.ctx.eid?zeitRef().e:null;
+    if(FM.ctx.eid&&!e){toast('Eintrag nicht gefunden.');return}
+    if(e){
+      FM.old=JSON.parse(JSON.stringify(e));
+      v.task=FM.ctx.tid;v.datum=deToIso(e.datum);v.komm=e.kommentar||'';
+      if(e.von&&e.bis&&e.von!==e.bis){v.mode='vb';v.von=e.von;v.bis=e.bis;v.pause=e.pause_min||0}
+      else{v.mode='dauer';const m=Math.round((+e.stunden||0)*60);v.dh=Math.floor(m/60);v.dm=m%60;v.von='';v.bis='';v.pause=0}
+    }else{
+      const now=new Date(),m=Math.round((now.getHours()*60+now.getMinutes())/15)*15;
+      Object.assign(v,{datum:isoToday(),mode:'vb',von:hm(m-60),bis:hm(m),pause:0,dh:1,dm:0,komm:''});
+      v.task=defaultTask();
+    }
+  }else if(kind==='kunde'){
+    const k=FM.ctx.ki!=null?K()[FM.ctx.ki]:null;FM.old=k?{name:k.name,stundensatz:k.stundensatz}:null;
+    Object.assign(v,{name:k?k.name:'',satz:numOut(k?k.stundensatz:50)});
+  }else if(kind==='projekt'){
+    const k=K()[FM.ctx.ki],p=FM.ctx.pi!=null?k.projekte[FM.ctx.pi]:null;
+    FM.old=p?JSON.parse(JSON.stringify(p)):null;
+    Object.assign(v,{name:p?one(p.name):'',nummer:p?p.nummer||'':'',status:p?p.status||'aktiv':'aktiv',abr:p?p.abrechnungstyp||'stundensatz':'stundensatz',
+      pausch:numOut(p?p.pauschalpreis:0),satz:numOut(p?(+p.stundensatz||+k.stundensatz||0):(+k.stundensatz||0)),beschr:p?p.beschreibung||'':''});
+  }else if(kind==='kalk'){
+    const p=K()[FM.ctx.ki].projekte[FM.ctx.pi];
+    const pos=((p.kalkulation&&p.kalkulation.positionen)||[]);
+    FM.alt=JSON.parse(JSON.stringify(pos));
+    FM.rows=pos.map(x=>({orig:x,text:x.text||'',menge:numOut(x.menge),einheit:x.einheit||'Stk',preis:numOut(x.preis),art:x.art||'sonstiges'}));
+    if(!FM.rows.length)FM.rows.push({orig:{},text:'',menge:'1',einheit:'Std.',preis:numOut(+p.stundensatz||+K()[FM.ctx.ki].stundensatz||0),art:'arbeit'});
+  }
+  document.getElementById('form').hidden=false;push();drawForm();
+  setTimeout(()=>{const f=document.querySelector('#form [data-autofocus]');if(f)f.focus()},60);
+}
+function zeitProj(){const [ki,pi]=String(FM.v.proj).split(':').map(Number);const k=K()[ki];return {ki,pi,k,p:k&&k.projekte[pi]}}
+function zeitRef(){const {k,p}=zeitProj();const t=p&&(p.tasks||[]).find(t=>String(t.id)===String(FM.ctx.tid));const e=t&&(t.zeiteintraege||[]).find(e=>String(e.id)===String(FM.ctx.eid));return {k,p,t,e}}
+function defaultTask(){
+  const {p}=zeitProj();const ts=((p&&p.tasks)||[]).filter(isHourTask);
+  const a=ts.filter(t=>isActive(t.status));return (a[a.length-1]||ts[ts.length-1]||{id:'__neu'}).id;
+}
+function formHide(){document.getElementById('form').hidden=true;document.getElementById('form').innerHTML='';FM=null}
+function formClose(){formHide();ignorePops++;history.back()}
+const fIn=(f,val,type='text',extra='')=>`<input data-f="${f}" type="${type}" value="${esc(val)}" ${extra}>`;
+function zeitCalc(){
+  const v=FM.v,{k,p}=zeitProj();
+  const h=v.mode==='vb'?stundenAus(v.von,v.bis,numIn(v.pause)):Math.round(((+v.dh||0)+(+v.dm||0)/60)*100)/100;
+  const satz=p?(+p.stundensatz||+k.stundensatz||0):0;
+  return {h,satz,text:h==null?'Von und Bis angeben':hrs(h)+(p&&p.abrechnungstyp!=='pauschal'?' · '+eur(h*satz):'')};
+}
+function drawForm(){
+  const el=document.getElementById('form');if(!FM)return;
+  const v=FM.v;let title='',sub='',body='',foot='';
+  const saveBtn=`<button class="btn" data-act="fsave">Speichern</button>`;
+  if(FM.kind==='zeit'){
+    const {k,p}=zeitProj();
+    title=FM.ctx.eid?'Zeit bearbeiten':'Zeit erfassen';sub=p?(p.nummer||one(p.name)):'';
+    const ts=((p&&p.tasks)||[]).filter(isHourTask);
+    const c=zeitCalc();
+    body=`<div class="fgrid">
+      ${FM.chooser?`<label class="fld"><span>Projekt</span><select data-f="proj" data-redraw="1">${projectChoices().map(x=>`<option value="${x.ki}:${x.pi}" ${v.proj===x.ki+':'+x.pi?'selected':''}>${esc((x.p.nummer?x.p.nummer+' · ':'')+one(x.p.name))}${x.act?'':' (abgeschlossen)'}</option>`).join('')}</select></label>`:''}
+      <label class="fld"><span>Task</span><select data-f="task" data-redraw="1" ${FM.ctx.eid?'disabled':''}>${ts.map(t=>`<option value="${esc(t.id)}" ${String(v.task)===String(t.id)?'selected':''}>${esc(t.name)}${isActive(t.status)?'':' (abgeschlossen)'}</option>`).join('')}${FM.ctx.eid?'':`<option value="__neu" ${v.task==='__neu'?'selected':''}>+ Neuer Task …</option>`}</select></label>
+      ${v.task==='__neu'?`<label class="fld"><span>Name des neuen Tasks</span>${fIn('tname',v.tname||'','text','placeholder="z. B. 3D Konstruktion" data-autofocus')}</label>`:''}
+      <label class="fld"><span>Datum</span>${fIn('datum',v.datum,'date')}</label>
+      <div class="seg"><button class="${v.mode==='vb'?'on':''}" data-fmode="vb">Von – Bis</button><button class="${v.mode==='dauer'?'on':''}" data-fmode="dauer">Dauer</button></div>
+      ${v.mode==='vb'?`<div class="frow"><label class="fld"><span>Von</span>${fIn('von',v.von,'time')}</label><label class="fld"><span>Bis</span>${fIn('bis',v.bis,'time')}</label><label class="fld"><span>Pause min</span>${fIn('pause',v.pause,'number','inputmode="numeric" min="0" step="5"')}</label></div>`
+        :`<div class="frow two"><label class="fld"><span>Stunden</span>${fIn('dh',v.dh,'number','inputmode="numeric" min="0" max="24"')}</label><label class="fld"><span>Minuten</span>${fIn('dm',v.dm,'number','inputmode="numeric" min="0" max="59" step="5"')}</label></div>`}
+      <div class="fcalc" id="fcalc"><span>Erfasst</span><b>${esc(c.text)}</b></div>
+      <label class="fld"><span>Kommentar</span><textarea data-f="komm" placeholder="Was wurde gemacht?">${esc(v.komm)}</textarea></label>
+    </div>`;
+    foot=FM.ctx.eid?`<div class="btnrow"><button class="btn danger ${FM.del?'on':''}" data-act="fdel" style="flex:1">${ic('papierkorb','s')}${FM.del?'Wirklich löschen?':'Löschen'}</button><div style="flex:1.4">${saveBtn}</div></div>`:saveBtn;
+  }else if(FM.kind==='kunde'){
+    title=FM.old?'Kunde bearbeiten':'Neuer Kunde';sub=FM.old?FM.old.name:'';
+    body=`<div class="fgrid"><label class="fld"><span>Name</span>${fIn('name',v.name,'text','data-autofocus autocomplete="organization"')}</label>
+      <label class="fld"><span>Stundensatz (€/h)</span>${fIn('satz',v.satz,'text','inputmode="decimal"')}</label>
+      <p class="fhint">Der Stundensatz gilt als Vorgabe für neue Projekte dieses Kunden.</p></div>`;
+    foot=saveBtn;
+  }else if(FM.kind==='projekt'){
+    const k=K()[FM.ctx.ki];
+    title=FM.old?'Projekt bearbeiten':'Neues Projekt';sub=k.name;
+    body=`<div class="fgrid"><label class="fld"><span>Projektname</span>${fIn('name',v.name,'text',FM.old?'':'data-autofocus')}</label>
+      <div class="frow two"><label class="fld"><span>Projektnummer</span>${fIn('nummer',v.nummer,'text','placeholder="z. B. ADH020"')}</label>
+      <label class="fld"><span>Status</span><select data-f="status">${['aktiv','pausiert','abgeschlossen'].concat(['aktiv','pausiert','abgeschlossen'].includes(v.status)?[]:[v.status]).map(x=>`<option ${v.status===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label></div>
+      <div class="seg"><button class="${v.abr==='stundensatz'?'on':''}" data-fabr="stundensatz">Stundensatz</button><button class="${v.abr==='pauschal'?'on':''}" data-fabr="pauschal">Pauschal</button></div>
+      <div class="frow two">${v.abr==='pauschal'?`<label class="fld"><span>Pauschalpreis (€)</span>${fIn('pausch',v.pausch,'text','inputmode="decimal"')}</label>`:''}<label class="fld"><span>Stundensatz (€/h)</span>${fIn('satz',v.satz,'text','inputmode="decimal"')}</label></div>
+      <label class="fld"><span>Beschreibung</span><textarea data-f="beschr">${esc(v.beschr)}</textarea></label>
+      ${FM.old?'':'<p class="fhint">Rechnungsnummer und Konstruktionsordner trägst du am PC ein.</p>'}</div>`;
+    foot=saveBtn;
+  }else if(FM.kind==='kalk'){
+    const p=K()[FM.ctx.ki].projekte[FM.ctx.pi];
+    title='Kalkulation';sub=p.nummer||one(p.name);
+    const sum=FM.rows.reduce((a,r)=>a+numIn(r.menge)*numIn(r.preis),0);
+    body=`<div class="fgrid">${FM.rows.map((r,i)=>`<div class="kpos"><div class="kh"><span>Position ${i+1}${r.orig.zeichnung?' · '+esc(r.orig.zeichnung):''}</span><button class="linkbtn" data-kdel="${i}" style="color:var(--err)">Entfernen</button></div>
+        <label class="fld"><span>Bezeichnung</span><input data-ki="${i}" data-kf="text" value="${esc(r.text)}"></label>
+        <div class="frow"><label class="fld"><span>Menge</span><input data-ki="${i}" data-kf="menge" value="${esc(r.menge)}" inputmode="decimal"></label>
+        <label class="fld"><span>Einheit</span><input data-ki="${i}" data-kf="einheit" value="${esc(r.einheit)}"></label>
+        <label class="fld"><span>Preis €</span><input data-ki="${i}" data-kf="preis" value="${esc(r.preis)}" inputmode="decimal"></label></div>
+        <label class="fld"><span>Art</span><select data-ki="${i}" data-kf="art">${[['arbeit','Arbeit'],['material','Material'],['sonstiges','Sonstiges']].map(([a,l])=>`<option value="${a}" ${r.art===a?'selected':''}>${l}</option>`).join('')}</select></label>
+        <div class="kv"><span>Betrag</span><span class="num" data-kb="${i}">${eur(numIn(r.menge)*numIn(r.preis))}</span></div></div>`).join('')}
+      <button class="btn ghost" data-act="kadd">${ic('plus','s')}Position hinzufügen</button>
+      <div class="fcalc"><span>Summe netto</span><b id="fsum">${eur(sum)}</b></div></div>`;
+    foot=saveBtn;
+  }
+  el.innerHTML=`<div class="ohead"><button class="hbtn" data-act="fcancel" aria-label="Abbrechen">${ic('close')}</button><h2><small>${esc(sub)}</small>${esc(title)}</h2></div>
+    <div class="obody">${FM.err?`<div class="ferr" role="alert">${esc(FM.err)}</div>`:''}${body}</div><div class="ofoot">${foot}</div>`;
+}
+function formErr(t){FM.err=t;drawForm();document.querySelector('#form .obody').scrollTop=0}
+function diff(fields,oldObj,neuObj){
+  const neu={},alt={};
+  fields.forEach(f=>{const a=oldObj[f],b=neuObj[f];const same=typeof b==='number'?Math.abs((+a||0)-b)<0.005:String(a??'')===String(b??'');if(!same){neu[f]=b;alt[f]=a??''}});
+  return Object.keys(neu).length?{neu,alt}:null;
+}
+function formSave(){
+  const v=FM.v,isEdit=!!FM.ctx.eid;
+  if(FM.kind==='zeit'){
+    const {k,p}=zeitProj();if(!p)return formErr('Projekt nicht gefunden.');
+    const datum=isoToDe(v.datum);if(!datum)return formErr('Bitte ein Datum wählen.');
+    const c=zeitCalc();if(c.h==null)return formErr('Bitte Von und Bis angeben.');
+    if(!(c.h>0))return formErr('Die Dauer ist 0. Bitte Von/Bis oder die Dauer prüfen.');
+    const vb=v.mode==='vb';
+    const e={datum,von:vb?v.von:'',bis:vb?v.bis:'',pause_min:vb?Math.round(numIn(v.pause)):0,stunden:c.h,kommentar:String(v.komm||'').trim()};
+    const ops=[];
+    if(FM.ctx.eid){
+      const d=diff(['datum','von','bis','pause_min','stunden','kommentar'],FM.old,e);
+      if(!d){formClose();return}
+      ops.push({typ:'zeit_aendern',kunde_id:k.id,projekt_id:p.id,task_id:FM.ctx.tid,eintrag_id:FM.ctx.eid,neu:d.neu,alt:d.alt});
+    }else{
+      let tid=v.task;
+      if(tid==='__neu'){
+        const name=String(v.tname||'').trim();if(!name)return formErr('Bitte einen Namen für den neuen Task eingeben.');
+        tid=newId();ops.push({typ:'task_neu',kunde_id:k.id,projekt_id:p.id,task:{id:tid,name,status:'aktiv'}});
+      }
+      ops.push({typ:'zeit_neu',kunde_id:k.id,projekt_id:p.id,task_id:tid,eintrag:Object.assign({id:newId()},e)});
+    }
+    addOps(ops);formClose();toast(isEdit?'Geändert.':'Gespeichert: '+hrs(c.h));return;
+  }
+  if(FM.kind==='kunde'){
+    const name=String(v.name||'').trim();if(!name)return formErr('Bitte einen Namen eingeben.');
+    const neu={name,stundensatz:Math.round(numIn(v.satz)*100)/100};
+    if(FM.old){const d=diff(['name','stundensatz'],FM.old,neu);if(!d){formClose();return}addOps([{typ:'kunde_aendern',kunde_id:K()[FM.ctx.ki].id,neu:d.neu,alt:d.alt}])}
+    else addOps([{typ:'kunde_neu',kunde:Object.assign({id:newId()},neu)}]);
+    formClose();toast('Gespeichert.');return;
+  }
+  if(FM.kind==='projekt'){
+    const name=String(v.name||'').trim();if(!name)return formErr('Bitte einen Projektnamen eingeben.');
+    const k=K()[FM.ctx.ki];
+    const neu={name,nummer:String(v.nummer||'').trim(),status:v.status,abrechnungstyp:v.abr,pauschalpreis:v.abr==='pauschal'?Math.round(numIn(v.pausch)*100)/100:(FM.old?+FM.old.pauschalpreis||0:0),stundensatz:Math.round(numIn(v.satz)*100)/100,beschreibung:String(v.beschr||'')};
+    if(FM.old){const d=diff(['name','nummer','status','abrechnungstyp','pauschalpreis','stundensatz','beschreibung'],FM.old,neu);if(!d){formClose();return}addOps([{typ:'projekt_aendern',kunde_id:k.id,projekt_id:FM.old.id,neu:d.neu,alt:d.alt}])}
+    else addOps([{typ:'projekt_neu',kunde_id:k.id,projekt:Object.assign({id:newId()},neu)}]);
+    formClose();toast('Gespeichert.');return;
+  }
+  if(FM.kind==='kalk'){
+    const k=K()[FM.ctx.ki],p=k.projekte[FM.ctx.pi];
+    const pos=FM.rows.filter(r=>String(r.text).trim()||numIn(r.preis)).map(r=>Object.assign({},r.orig,{text:String(r.text).trim(),menge:numIn(r.menge),einheit:String(r.einheit).trim()||'Stk',preis:numIn(r.preis),art:r.art}));
+    if(JSON.stringify(pos)===JSON.stringify(FM.alt)){formClose();return}
+    addOps([{typ:'kalkulation_setzen',kunde_id:k.id,projekt_id:p.id,positionen:pos,alt:FM.alt}]);
+    formClose();toast('Kalkulation gespeichert.');return;
+  }
+}
+function formDelete(){
+  if(!FM.del){FM.del=true;drawForm();return}
+  const {k,p,e}=zeitRef();if(!e){formClose();return}
+  addOps([{typ:'zeit_loeschen',kunde_id:k.id,projekt_id:p.id,task_id:FM.ctx.tid,eintrag_id:e.id,alt:{datum:e.datum,stunden:e.stunden,kommentar:e.kommentar||''}}]);
+  formClose();toast('Eintrag gelöscht.');
+}
+function formInput(t){
+  if(!FM)return;
+  if(t.dataset.f){
+    FM.v[t.dataset.f]=t.value;
+    if(t.dataset.f==='proj'){FM.v.task=defaultTask();drawForm();return}
+    if(t.dataset.redraw){drawForm();return}
+    if(FM.kind==='zeit'){const c=document.querySelector('#fcalc b');if(c)c.textContent=zeitCalc().text}
+    return;
+  }
+  if(t.dataset.kf){
+    const i=+t.dataset.ki;FM.rows[i][t.dataset.kf]=t.value;
+    const b=document.querySelector(`[data-kb="${i}"]`);if(b)b.textContent=eur(numIn(FM.rows[i].menge)*numIn(FM.rows[i].preis));
+    const s=document.getElementById('fsum');if(s)s.textContent=eur(FM.rows.reduce((a,r)=>a+numIn(r.menge)*numIn(r.preis),0));
+  }
 }
 
 // ════════════ PDF-Reader ════════════
@@ -995,10 +1347,25 @@ document.addEventListener('click',ev=>{
       delete folderCache[cur.id];saveSettings();closeSheet();setTimeout(render,50);toast('Ordner verknüpft.');return;
     }
     case 'pvclose':uiBack();return;
+    case 'fcancel':formClose();return;
+    case 'fsave':formSave();return;
+    case 'fdel':formDelete();return;
+    case 'kadd':FM.rows.push({orig:{},text:'',menge:'1',einheit:'Stk',preis:'0',art:'sonstiges'});drawForm();setTimeout(()=>{const l=document.querySelectorAll('#form [data-kf="text"]');if(l.length)l[l.length-1].focus()},30);return;
+    case 'newzeit':openForm('zeit',ctxFromStack().pi!=null?ctxFromStack():{});return;
+    case 'newkunde':openForm('kunde',{});return;
+    case 'editkunde':openForm('kunde',{ki:ctxFromStack().ki});return;
+    case 'newprojekt':openForm('projekt',{ki:ctxFromStack().ki});return;
+    case 'editprojekt':openForm('projekt',ctxFromStack());return;
+    case 'editkalk':openForm('kalk',ctxFromStack());return;
+    case 'syncnow':if(!tokenValid())needLogin(()=>syncOps());else syncOps();return;
     case 'zin':setZoom(PV.z*1.5);return;
     case 'zout':setZoom(PV.z/1.5);return;
     case 'zfit':setZoom(1);return;
   }
+  if(d.fmode){FM.v.mode=d.fmode;drawForm();return}
+  if(d.fabr){FM.v.abr=d.fabr;drawForm();return}
+  if(d.kdel!=null&&FM){FM.rows.splice(+d.kdel,1);drawForm();return}
+  if(d.ez){const [ki,pi,tid,eid]=d.ez.split('|');openForm('zeit',{ki:+ki,pi:+pi,tid,eid});return}
   if(d.shOpen){SH.chain.push({id:d.shOpen,name:d.name});SH.depth++;push();loadSheet();return}
   if(d.shFile){SET.dataFileId=d.shFile;SET.dataFileName=d.name;saveSettings();closeSheet();setTimeout(()=>loadData(),50);return}
   if(d.pdf){openPdf(d.pdf,d.name);return}
@@ -1015,6 +1382,7 @@ document.addEventListener('click',ev=>{
   }
 });
 document.addEventListener('input',ev=>{
+  if(ev.target.closest('#form')){formInput(ev.target);return}
   const id=ev.target.id;if(id!=='zq'&&id!=='kq')return;
   if(id==='zq')ui.zeitQ=ev.target.value;else ui.kundenQ=ev.target.value;
   const pos=ev.target.selectionStart;render();
@@ -1026,8 +1394,9 @@ window.addEventListener('resize',()=>{if(PV&&PV.els){layout();PV.pages.forEach(p
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&tokenValid()&&SET.dataFileId&&Date.now()-(META.loadedAt||0)>300000)loadData(true)});
 
 history.replaceState({vanta:0},'');
+rebuildView();
 render();
-if(tokenValid()){loadRemoteSettings().then(()=>{if(SET.dataFileId&&Date.now()-(META.loadedAt||0)>300000)return loadData(true)}).then(()=>render()).catch(()=>{})}
+if(tokenValid()){loadRemoteSettings().then(()=>{if(SET.dataFileId&&Date.now()-(META.loadedAt||0)>300000)return loadData(true);if(OPS_DIRTY)return syncOps()}).then(()=>render()).catch(()=>{})}
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
