@@ -822,21 +822,25 @@ function vUmsatz(){
   if(!DATA)return welcome();
   const pay=allPayments();
   const years=[...new Set(pay.map(x=>x.d.getFullYear()))].sort((a,b)=>b-a);
-  if(ui.umsatzJahr==null||!years.includes(ui.umsatzJahr))ui.umsatzJahr=years[0]||new Date().getFullYear();
-  const Y=ui.umsatzJahr,yp=pay.filter(x=>x.d.getFullYear()===Y);
-  const months=Array(12).fill(0);yp.forEach(x=>months[x.d.getMonth()]+=+x.z.betrag||0);
-  const total=months.reduce((a,b)=>a+b,0),max=Math.max(...months,1);
+  if(ui.umsatzJahr==null||(ui.umsatzJahr!=='alle'&&!years.includes(ui.umsatzJahr)))ui.umsatzJahr=years[0]||'alle';
+  const Y=ui.umsatzJahr,alle=Y==='alle';
+  const yp=alle?pay:pay.filter(x=>x.d.getFullYear()===Y);
+  // Balken: pro Jahr (Alle) oder pro Monat (einzelnes Jahr)
+  const rows=alle?years.slice().reverse().map(y=>({l:String(y),v:pay.filter(x=>x.d.getFullYear()===y).reduce((a,x)=>a+(+x.z.betrag||0),0),jahr:y}))
+                 :MONK.map((m,i)=>({l:m,v:yp.filter(x=>x.d.getMonth()===i).reduce((a,x)=>a+(+x.z.betrag||0),0)}));
+  const total=yp.reduce((a,x)=>a+(+x.z.betrag||0),0),max=Math.max(...rows.map(r=>r.v),1);
   const byK={};yp.forEach(x=>{byK[x.k.name]=(byK[x.k.name]||0)+(+x.z.betrag||0)});
   const ks=Object.entries(byK).sort((a,b)=>b[1]-a[1]);
-  return `<div class="chips">${years.map(y=>`<button class="chip m ${y===Y?'on':''}" data-jahr="${y}">${y}</button>`).join('')}</div>
+  const label=alle?'gesamt':String(Y);
+  return `<div class="chips"><button class="chip ${alle?'on':''}" data-jahr="alle">Alle</button>${years.map(y=>`<button class="chip m ${y===Y?'on':''}" data-jahr="${y}">${y}</button>`).join('')}</div>
   <div class="kpis" style="grid-template-columns:1fr 1fr">
-    <div class="kpi"><small>Umsatz ${Y}</small><div class="v">${eur(total)}</div></div>
-    <div class="kpi"><small>Zahlungen</small><div class="v">${yp.length}</div></div></div>
-  <section class="sec"><h2>Nach Monat</h2><div class="list bars">
-    ${months.map((v,i)=>`<div class="bar ${v?'':'zero'}"><span class="l">${MONK[i]}</span><div class="track"><div class="fill" style="width:${(v/max*100).toFixed(1)}%"></div></div><span class="v">${v?eur0(v):'–'}</span></div>`).join('')}
-  </div></section>
-  <section class="sec"><h2>Nach Kunde</h2><div class="list">${ks.map(([n,v])=>`<div class="row"><div class="main"><div class="t">${esc(n)}</div><div class="m">${total?Math.round(v/total*100):0} % vom Jahr</div></div><div class="r"><span class="num">${eur(v)}</span></div></div>`).join('')||'<div class="empty">Keine Zahlungen.</div>'}</div></section>
-  <section class="sec"><h2>Zahlungen ${Y}</h2><div class="list">${yp.map(x=>`<button class="row" data-go="projekt" data-ki="${x.ki}" data-pi="${x.pi}"><div class="main"><div class="t">${esc(x.z.kommentar||'Zahlung')}</div>
+    <div class="kpi"><small>Umsatz ${label}</small><div class="v">${eur(total)}</div></div>
+    <div class="kpi"><small>${alle&&years.length?'Ø pro Jahr':'Zahlungen'}</small><div class="v">${alle&&years.length?eur0(total/years.length):yp.length}</div></div></div>
+  <section class="sec"><h2>${alle?'Nach Jahr':'Nach Monat'}</h2><div class="list bars">
+    ${rows.map(r=>`<${r.jahr?`button data-jahr="${r.jahr}"`:'div'} class="bar ${r.v?'':'zero'}" style="width:100%;text-align:left"><span class="l">${r.l}</span><div class="track"><div class="fill" style="width:${(r.v/max*100).toFixed(1)}%"></div></div><span class="v">${r.v?eur0(r.v):'–'}</span></${r.jahr?'button':'div'}>`).join('')}
+  </div>${alle?'<p class="note" style="margin:0 2px">Auf ein Jahr tippen, um die Monate zu sehen.</p>':''}</section>
+  <section class="sec"><h2>Nach Kunde</h2><div class="list">${ks.map(([n,v])=>`<div class="row"><div class="main"><div class="t">${esc(n)}</div><div class="m">${total?Math.round(v/total*100):0} % ${alle?'vom Gesamtumsatz':'vom Jahr'}</div></div><div class="r"><span class="num">${eur(v)}</span></div></div>`).join('')||'<div class="empty">Keine Zahlungen.</div>'}</div></section>
+  <section class="sec"><h2>Zahlungen ${alle?'<span>'+yp.length+'</span>':Y}</h2><div class="list">${yp.map(x=>`<button class="row" data-go="projekt" data-ki="${x.ki}" data-pi="${x.pi}"><div class="main"><div class="t">${esc(x.z.kommentar||'Zahlung')}</div>
     <div class="m"><span class="mono">${esc(x.z.datum)}</span><span class="tag">${esc(x.p.nummer||'')}</span><span>${esc(x.k.name)}</span></div></div><div class="r"><span class="num">${eur(x.z.betrag)}</span></div></button>`).join('')||'<div class="empty">Keine Zahlungen.</div>'}</div></section>`;
 }
 
@@ -1370,7 +1374,7 @@ document.addEventListener('click',ev=>{
   if(d.shFile){SET.dataFileId=d.shFile;SET.dataFileName=d.name;saveSettings();closeSheet();setTimeout(()=>loadData(),50);return}
   if(d.pdf){openPdf(d.pdf,d.name);return}
   if(d.per){ui.zeitPer=d.per;render();return}
-  if(d.jahr){ui.umsatzJahr=+d.jahr;render();return}
+  if(d.jahr){ui.umsatzJahr=d.jahr==='alle'?'alle':+d.jahr;render(true);return}
   if(d.themeSet){SET.theme=d.themeSet;applyTheme();saveSettings();render();return}
   if(d.accent){SET.accent=d.accent;applyTheme();saveSettings();render();return}
   if(d.taskToggle){const k=d.taskToggle;ui.openTasks.has(k)?ui.openTasks.delete(k):ui.openTasks.add(k);b.parentElement.classList.toggle('open');b.setAttribute('aria-expanded',ui.openTasks.has(k));return}
