@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vanta PDM</title>
+<meta name="theme-color" content="#0E1013">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vanta">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F5F6F8; --s1:#FFFFFF; --s2:#EFF1F4; --s3:#E4E7EC;
+  --border:#DDE1E6; --borderb:#BFC5CE;
+  --text:#161A1F; --muted:#5A6270; --dim:#8A929E;
+  --accent:#CC2200;
+  --accent-t:color-mix(in srgb,var(--accent) 86%,#000);
+  --accent-soft:color-mix(in srgb,var(--accent) 10%,transparent);
+  --ok:#1F8B3E; --warn:#8A6400; --err:#D32F2F;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1013; --s1:#14171C; --s2:#1A1E24; --s3:#22272F;
+    --border:#2A3039; --borderb:#3A424E;
+    --text:#E8EAED; --muted:#8F97A3; --dim:#6E7683;
+    --accent-t:color-mix(in srgb,var(--accent) 68%,#fff);
+    --accent-soft:color-mix(in srgb,var(--accent) 16%,transparent);
+    --ok:#3DD68C; --warn:#F5B544; --err:#F2555A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1013; --s1:#14171C; --s2:#1A1E24; --s3:#22272F;
+  --border:#2A3039; --borderb:#3A424E;
+  --text:#E8EAED; --muted:#8F97A3; --dim:#6E7683;
+  --accent-t:color-mix(in srgb,var(--accent) 68%,#fff);
+  --accent-soft:color-mix(in srgb,var(--accent) 16%,transparent);
+  --ok:#3DD68C; --warn:#F5B544; --err:#F2555A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg)}
+body{color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent-t)}
+.num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.s{width:18px;height:18px}
+
+.app{max-width:600px;margin:0 auto;min-height:100vh;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);
+  display:flex;align-items:center;gap:8px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px;margin-top:calc(-1 * env(safe-area-inset-top,0px));border-bottom:1px solid var(--border)}
+header.top h1{font-size:19px;font-weight:700;letter-spacing:-.01em;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.top .sub{display:block;font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis}
+.back{display:flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-8px;border-radius:10px;color:var(--accent-t)}
+.back:active{background:var(--accent-soft)}
+.hbtn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;color:var(--muted)}
+.hbtn:active{background:var(--s2)}
+.brand{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:15px;font-weight:700;flex:none}
+
+main{padding:16px;display:flex;flex-direction:column;gap:20px}
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec>h2{font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 2px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sec>h2 span{font-family:var(--mono);letter-spacing:0;text-transform:none;font-weight:500}
+.sec>h2 button{font-family:var(--sans);letter-spacing:0;text-transform:none;font-size:13px;color:var(--accent-t);font-weight:600}
+
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:10px 12px;min-width:0}
+.kpi small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-family:var(--mono);font-size:18px;font-weight:500;margin-top:2px;white-space:nowrap}
+.kpi .v u{text-decoration:none;font-size:12px;color:var(--muted);margin-left:2px}
+
+.list{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--border);width:100%;text-align:left}
+.list>.row:first-child,.list>:first-child .row:first-child{border-top:0}
+button.row:active{background:var(--s2)}
+.row .main{flex:1;min-width:0}
+.row .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t.wrap{white-space:normal;overflow-wrap:anywhere}
+.row .m{font-size:13px;color:var(--muted);display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center}
+.row .r{text-align:right;flex:none}
+.row .r .num{display:block;font-size:14px}
+.row .r small{display:block;font-size:12px;color:var(--muted)}
+.row .chev{color:var(--dim)}
+.row .ic{color:var(--muted)}
+.row .ic.pdf{color:var(--accent-t)}
+.row.dim{opacity:.55}
+.tag{font-family:var(--mono);font-size:12px;color:var(--accent-t)}
+.pill{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:var(--s3);color:var(--muted);white-space:nowrap}
+.pill.aktiv{background:var(--accent-soft);color:var(--accent-t)}
+.empty{padding:14px;color:var(--muted);font-size:14px}
+.loading{padding:14px;color:var(--muted);font-size:14px;display:flex;gap:10px;align-items:center}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--accent);animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0;font-size:17px}
+.phead .nr{font-family:var(--mono);font-size:13px;color:var(--accent-t)}
+.phead h3{margin:2px 0 0;font-size:20px;line-height:1.25;text-wrap:balance}
+.phead .m{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.stats div{background:var(--s2);padding:9px 11px;min-width:0}
+.stats small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.stats .num{font-size:16px}
+.desc{white-space:pre-wrap;font-size:14px;max-width:65ch}
+.path{display:flex;gap:10px;align-items:flex-start;font-size:13px}
+.path .p{font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-word}
+.path .loc{font-weight:600;font-size:13px}
+.path.drive .loc{color:var(--ok)}
+.path.pc .loc{color:var(--warn)}
+
+.task{border-top:1px solid var(--border)}
+.task:first-child{border-top:0}
+.task>button{display:flex;gap:10px;align-items:center;width:100%;padding:12px 14px;text-align:left}
+.task>button .main{flex:1;min-width:0}
+.task>button .t{font-weight:600}
+.task>button .m{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.task>button>svg{transition:transform .15s;color:var(--dim)}
+.task.open>button>svg{transform:rotate(90deg)}
+.entries{display:none;padding:0 14px 10px}
+.task.open>.entries{display:block}
+.entry{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;padding:8px 0;border-top:1px dashed var(--border);font-size:14px}
+.entry .d{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:2px}
+.entry .c{white-space:pre-wrap;min-width:0;overflow-wrap:anywhere}
+.entry .h{font-family:var(--mono);text-align:right}
+.entry .vb{grid-column:2/4;font-family:var(--mono);font-size:12px;color:var(--dim)}
+.openp{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--accent-t);padding:8px 0 2px}
+
+.kgroup{display:flex;flex-direction:column;gap:8px}
+.khead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:4px 2px 0}
+.khead b{font-size:16px}
+.khead span{font-family:var(--mono);font-size:13px;color:var(--muted)}
+
+.kalk .pos{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:9px 14px;border-top:1px solid var(--border);font-size:14px}
+.kalk .pos:first-child{border-top:0}
+.kalk .pos .q{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.kalk .pos .s{font-family:var(--mono);text-align:right;grid-row:1/3;grid-column:2;align-self:center}
+.kalk .sum{display:flex;justify-content:space-between;padding:11px 14px;background:var(--s2);border-top:1px solid var(--borderb);font-weight:600}
+
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 12px;border-radius:99px;border:1px solid var(--border);background:var(--s1);font-size:14px;white-space:nowrap}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip.m{font-family:var(--mono)}
+
+.bars{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.bar{display:grid;grid-template-columns:34px 1fr 76px;gap:10px;align-items:center;font-size:13px}
+.bar .l{color:var(--muted)}
+.bar .track{height:12px;border-radius:3px;background:var(--s2);overflow:hidden}
+.bar .fill{height:100%;background:var(--accent);border-radius:3px}
+.bar .v{font-family:var(--mono);text-align:right}
+.bar.zero .v{color:var(--dim)}
+
+.search{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:0 12px;color:var(--muted)}
+.search input{flex:1;border:0;background:none;color:var(--text);font:inherit;font-size:16px;padding:10px 0;outline:none;min-width:0}
+
+.note{font-size:13px;color:var(--muted);max-width:65ch;margin:0}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;background:var(--accent);color:#fff;font-weight:600;width:100%}
+.btn.ghost{background:var(--s1);color:var(--text);border:1px solid var(--border)}
+.btn.small{width:auto;padding:8px 12px;font-size:14px;border-radius:10px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.linkbtn{color:var(--accent-t);font-weight:600;font-size:14px}
+.banner{display:flex;gap:10px;align-items:center;background:var(--s1);border:1px solid var(--border);border-left:3px solid var(--warn);border-radius:12px;padding:10px 12px;font-size:14px}
+.banner .main{flex:1;min-width:0}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--s2);border-radius:10px;padding:3px;gap:3px}
+.seg button{padding:8px 4px;border-radius:8px;font-size:14px;color:var(--muted);font-weight:500}
+.seg button.on{background:var(--s1);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid transparent;display:grid;place-items:center}
+.sw i{width:24px;height:24px;border-radius:50%;display:block}
+.sw.on{border-color:var(--text)}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{text-align:right;overflow-wrap:anywhere;min-width:0}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--s1);border-top:1px solid var(--border);
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+nav.tabs .in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11px;color:var(--muted);font-weight:500;border-radius:10px}
+nav.tabs button.on{color:var(--accent-t)}
+
+/* Sheet (Ordnerauswahl) */
+.overlay{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column}
+.ohead{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;border-bottom:1px solid var(--border);background:var(--bg)}
+.ohead h2{flex:1;min-width:0;margin:0;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ohead h2 small{display:block;font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.obody{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.ofoot{padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--bg)}
+.crumbs{font-family:var(--mono);font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+
+/* PDF-Reader */
+.pv{position:fixed;inset:0;z-index:30;background:#1D2025;display:flex;flex-direction:column;color:#E8EAED}
+.pv .ohead{background:#14171C;border-color:#2A3039;color:#E8EAED}
+.pv .ohead h2 small{color:#8F97A3}
+.pv .hbtn{color:#C9CED6}
+.pv .hbtn:active{background:#2A3039}
+.pvs{flex:1;overflow:auto;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;position:relative;overscroll-behavior:contain}
+.pvin{width:max-content;min-width:100%;padding:8px 0 24px;transform-origin:0 0}
+.pg{background:#fff;margin:8px auto;box-shadow:0 1px 4px rgba(0,0,0,.4);position:relative}
+.pg canvas{display:block;width:100%;height:100%;position:relative;z-index:1}
+.pg .pn{position:absolute;top:50%;left:0;right:0;text-align:center;color:#9AA2AE;font-family:var(--mono);font-size:13px;transform:translateY(-50%)}
+.pvbar{display:flex;align-items:center;gap:4px;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:#14171C;border-top:1px solid #2A3039}
+.pvbar .pc{flex:1;text-align:center;font-family:var(--mono);font-size:13px;color:#C9CED6}
+.pvmsg{margin:auto;padding:24px;text-align:center;max-width:36ch;display:flex;flex-direction:column;gap:12px;align-items:center;color:#C9CED6}
+.pvmsg a{color:#FF8A73}
+
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:#22272F;color:#E8EAED;padding:10px 14px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top" id="top"></header>
+  <main id="view"></main>
+</div>
+<nav class="tabs"><div class="in" id="tabs"></div></nav>
+<div id="sheet" class="overlay" hidden></div>
+<div id="pv" class="pv" hidden></div>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script>
+(function(){
+'use strict';
+// ════════════ Konfiguration ════════════
+// Diese Werte sind öffentlich und dürfen im Code stehen. Abgesichert sind sie
+// über die erlaubte Adresse (salmir459-code.github.io) in Google Cloud.
+const CFG={
+  clientId:'166896336792-dj1q2nkufpbb4ir6htrbjbj3muldansg.apps.googleusercontent.com',
+  scopes:['https://www.googleapis.com/auth/drive.readonly','https://www.googleapis.com/auth/drive.appdata'],
+  settingsName:'vanta_mobile.json'
+};
+const VERSION='Mobil 1.0';
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_W='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const FOLDER='application/vnd.google-apps.folder';
+const ACCENTS={rot:'#CC2200',korall:'#E05A47',orange:'#D2691E',gold:'#C9A227',smaragd:'#1A6B3C',petrol:'#0F7A70',stahlblau:'#1560BD',azur:'#0A84FF',indigo:'#5A4FCF',violett:'#7B3FBF',graphit:'#6E7681'};
+
+// ════════════ Hilfen ════════════
+const ICON={
+  haus:'<path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/>',
+  kunden:'<path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0-8 0"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/>',
+  ordner:'<path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2"/>',
+  zeit:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  umsatz:'<path d="M3 20h18"/><path d="M6 16v-3"/><path d="M10 16v-6"/><path d="M14 16v-4"/><path d="M18 16V6"/>',
+  zahnrad:'<path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.4 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.6-1c-1.5.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1-2.6c-1.8-.4-1.8-3 0-3.4a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4a1.7 1.7 0 0 0 2.6-1.1"/><circle cx="12" cy="12" r="3"/>',
+  back:'<path d="M15 6l-6 6 6 6"/>',
+  close:'<path d="M18 6L6 18"/><path d="M6 6l12 12"/>',
+  chev:'<path d="M9 6l6 6-6 6"/>',
+  suchen:'<circle cx="10" cy="10" r="7"/><path d="M21 21l-6-6"/>',
+  neu:'<path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/>',
+  dokument:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>',
+  link:'<path d="M9 15l6-6"/><path d="M11 6l.46-.54a5 5 0 0 1 7.07 7.08L18 13"/><path d="M13 18l-.4.53a5.07 5.07 0 0 1-7.12 0 4.97 4.97 0 0 1 0-7.07L6 11"/>',
+  plus:'<path d="M12 5v14"/><path d="M5 12h14"/>',
+  minus:'<path d="M5 12h14"/>',
+  breite:'<path d="M3 12h18"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/>',
+  extern:'<path d="M12 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/><path d="M11 13l9-9"/><path d="M15 4h5v5"/>',
+  google:'<path d="M20.9 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5a4.3 4.3 0 0 1-1.9 2.8v2.3h3a9 9 0 0 0 2.8-6.8z"/><path d="M12 21c2.4 0 4.5-.8 6-2.2l-3-2.3a5.4 5.4 0 0 1-8-2.8H4v2.4A9 9 0 0 0 12 21z"/><path d="M7 13.7a5.4 5.4 0 0 1 0-3.4V7.9H4a9 9 0 0 0 0 8.2l3-2.4z"/><path d="M12 6.6c1.3 0 2.5.5 3.4 1.3l2.6-2.6A9 9 0 0 0 4 7.9l3 2.4a5.4 5.4 0 0 1 5-3.7z"/>'
+};
+const ic=(n,c='')=>`<svg class="i ${c}" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur=v=>(+v||0).toLocaleString('de-AT',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const eur0=v=>Math.round(+v||0).toLocaleString('de-AT')+' €';
+const hrs=v=>(+v||0).toLocaleString('de-AT',{minimumFractionDigits:2,maximumFractionDigits:2})+' h';
+const h1=v=>(+v||0).toLocaleString('de-AT',{maximumFractionDigits:1});
+const MON=['Jänner','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const MONK=['Jän','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+function pd(s){const m=/^(\d{1,2})\.(\d{1,2})\.(\d{4})/.exec(s||'');return m?new Date(+m[3],m[2]-1,+m[1]):null}
+const one=s=>String(s||'').replace(/\s*\n\s*/g,' ');
+const fmtWhen=t=>{const d=new Date(t);return d.toLocaleDateString('de-AT')+', '+d.toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'})};
+const fmtSize=b=>{b=+b||0;return b>1048576?(b/1048576).toLocaleString('de-AT',{maximumFractionDigits:1})+' MB':Math.max(1,Math.round(b/1024))+' KB'};
+const LS={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let toastT;function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+
+// ════════════ Zustand ════════════
+let DATA=LS.get('vanta_data');          // pdm_projects.json (Zwischenspeicher auf dem Handy)
+let META=LS.get('vanta_meta')||{};      // {name, loadedAt, modifiedTime}
+let SET=Object.assign({dataFileId:'',dataFileName:'',links:{},theme:'system',accent:'rot'},LS.get('vanta_settings')||{});
+let AUTH=LS.get('vanta_auth')||{};      // {token, exp, email, name}
+let remoteSettingsId=null;
+
+function applyTheme(){
+  const r=document.documentElement;
+  if(SET.theme==='light'||SET.theme==='dark')r.dataset.theme=SET.theme;else delete r.dataset.theme;
+  r.style.setProperty('--accent',ACCENTS[SET.accent]||ACCENTS.rot);
+  const dark=SET.theme==='dark'||(SET.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
+  document.querySelector('meta[name=theme-color]').content=dark?'#0E1013':'#F5F6F8';
+}
+applyTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',applyTheme);
+
+// ════════════ Google-Anmeldung ════════════
+let tokenClient=null, pendingAfterLogin=null;
+const tokenValid=()=>!!AUTH.token&&Date.now()<(AUTH.exp||0)-60000;
+function initGis(){
+  if(tokenClient||!(window.google&&google.accounts&&google.accounts.oauth2))return;
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CFG.clientId,scope:CFG.scopes.join(' '),
+    callback:onToken,
+    error_callback:e=>{toast(e&&e.type==='popup_closed'?'Anmeldung abgebrochen.':'Anmeldung nicht möglich. Erlaube Pop-ups für diese Seite und versuch es noch einmal.')}
+  });
+}
+window.__gisLoaded=initGis;
+function signIn(){
+  initGis();
+  if(!tokenClient){toast('Die Google-Anmeldung lädt noch. Versuch es in ein paar Sekunden noch einmal.');return}
+  tokenClient.requestAccessToken({prompt:AUTH.email?'':'select_account',login_hint:AUTH.email||undefined});
+}
+async function onToken(r){
+  if(!r||r.error){toast('Anmeldung fehlgeschlagen: '+(r&&r.error||'unbekannt'));return}
+  if(!google.accounts.oauth2.hasGrantedAllScopes(r,...CFG.scopes)){
+    toast('Bitte beide Häkchen im Google-Fenster setzen, sonst kann die App deine Dateien nicht lesen.');
+  }
+  AUTH.token=r.access_token;AUTH.exp=Date.now()+(+r.expires_in||3600)*1000;LS.set('vanta_auth',AUTH);
+  try{const a=await api('about',{fields:'user(displayName,emailAddress)'});AUTH.email=a.user.emailAddress;AUTH.name=a.user.displayName;LS.set('vanta_auth',AUTH)}catch(e){}
+  await loadRemoteSettings();
+  if(SET.dataFileId)await loadData(true);
+  render();
+  const f=pendingAfterLogin;pendingAfterLogin=null;if(f)f();
+}
+function signOut(){
+  try{if(AUTH.token)google.accounts.oauth2.revoke(AUTH.token,()=>{})}catch(e){}
+  AUTH={};LS.del('vanta_auth');render();toast('Abgemeldet.');
+}
+function needLogin(then){pendingAfterLogin=then||null;signIn()}
+
+// ════════════ Google Drive ════════════
+class AuthErr extends Error{}
+async function api(path,params={},opt={}){
+  if(!tokenValid())throw new AuthErr('auth');
+  const url=(opt.upload?'https://www.googleapis.com/upload/drive/v3/':'https://www.googleapis.com/drive/v3/')+path+'?'+new URLSearchParams(params);
+  const res=await fetch(url,{method:opt.method||'GET',headers:Object.assign({Authorization:'Bearer '+AUTH.token},opt.headers||{}),body:opt.body});
+  if(res.status===401){AUTH.token='';LS.set('vanta_auth',AUTH);throw new AuthErr('auth')}
+  if(!res.ok){let m=res.status+'';try{m=(await res.json()).error.message}catch(e){}throw new Error(m)}
+  if(opt.raw)return res;
+  return res.status===204?null:res.json();
+}
+const SHARED={supportsAllDrives:'true',includeItemsFromAllDrives:'true'};
+async function listChildren(id){
+  let out=[],token='';
+  do{
+    const p=Object.assign({q:`'${id}' in parents and trashed=false`,fields:'nextPageToken,files(id,name,mimeType,size,modifiedTime,shortcutDetails)',pageSize:'500',orderBy:'folder,name_natural'},SHARED);
+    if(token)p.pageToken=token;
+    const r=await api('files',p);out=out.concat(r.files||[]);token=r.nextPageToken||'';
+  }while(token);
+  return out.map(f=>f.mimeType==='application/vnd.google-apps.shortcut'&&f.shortcutDetails?Object.assign({},f,{id:f.shortcutDetails.targetId,mimeType:f.shortcutDetails.targetMimeType,shortcut:true}):f);
+}
+const qEsc=s=>s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+async function findChild(parent,name,folderOnly){
+  const p=Object.assign({q:`'${parent}' in parents and name='${qEsc(name)}' and trashed=false`+(folderOnly?` and mimeType='${FOLDER}'`:''),fields:'files(id,name)',pageSize:'5'},SHARED);
+  const r=await api('files',p);return (r.files||[])[0]||null;
+}
+// Windows-Pfad (G:/Meine Ablage/…) → Kette von Drive-Ordnern; so weit, wie gefunden
+async function resolvePath(p){
+  const m=/^[A-Z]:\/(?:Meine Ablage|My Drive)\/(.+)$/i.exec(String(p||'').replace(/\\/g,'/'));
+  const chain=[{id:'root',name:'Meine Ablage'}];
+  if(!m)return chain;
+  let parent='root';
+  for(const part of m[1].split('/').filter(Boolean)){
+    try{const f=await findChild(parent,part,true);if(!f)break;chain.push({id:f.id,name:f.name});parent=f.id}catch(e){if(e instanceof AuthErr)throw e;break}
+  }
+  return chain;
+}
+async function download(id,onProgress){
+  const res=await api('files/'+encodeURIComponent(id),Object.assign({alt:'media'},{supportsAllDrives:'true'}),{raw:true});
+  if(!res.body||!onProgress)return res.arrayBuffer();
+  const reader=res.body.getReader();const chunks=[];let n=0;
+  for(;;){const {done,value}=await reader.read();if(done)break;chunks.push(value);n+=value.length;onProgress(n)}
+  const buf=new Uint8Array(n);let o=0;for(const c of chunks){buf.set(c,o);o+=c.length}
+  return buf.buffer;
+}
+
+// Einstellungen: versteckter App-Ordner auf deinem Drive (nur diese App sieht ihn)
+async function loadRemoteSettings(){
+  try{
+    const r=await api('files',{spaces:'appDataFolder',q:`name='${CFG.settingsName}'`,fields:'files(id)'});
+    const f=(r.files||[])[0];
+    if(!f){remoteSettingsId=null;if(SET.dataFileId||Object.keys(SET.links).length)saveSettings();return}
+    remoteSettingsId=f.id;
+    const txt=new TextDecoder().decode(await download(f.id));
+    const o=JSON.parse(txt);
+    SET=Object.assign(SET,o,{links:Object.assign({},o.links||{})});
+    LS.set('vanta_settings',SET);applyTheme();
+  }catch(e){if(e instanceof AuthErr)throw e;console.warn('Einstellungen',e)}
+}
+let saveT;
+function saveSettings(){
+  LS.set('vanta_settings',SET);
+  clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    if(!tokenValid())return;
+    const body=JSON.stringify(SET);
+    try{
+      if(remoteSettingsId){
+        await api('files/'+remoteSettingsId,{uploadType:'media'},{upload:true,method:'PATCH',headers:{'Content-Type':'application/json'},body});
+      }else{
+        const b='vanta'+Math.random().toString(36).slice(2);
+        const meta=JSON.stringify({name:CFG.settingsName,parents:['appDataFolder']});
+        const multi=`--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${b}--`;
+        const r=await api('files',{uploadType:'multipart',fields:'id'},{upload:true,method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body:multi});
+        remoteSettingsId=r.id;
+      }
+    }catch(e){console.warn('Speichern',e);toast('Einstellungen nur auf diesem Handy gespeichert (Drive nicht erreichbar).')}
+  },600);
+}
+
+let loadingData=false;
+async function loadData(silent){
+  if(!SET.dataFileId||loadingData)return;
+  loadingData=true;if(!silent)render();
+  try{
+    const m=await api('files/'+SET.dataFileId,{fields:'id,name,modifiedTime,trashed',supportsAllDrives:'true'});
+    if(m.trashed)throw new Error('Die Datei liegt im Papierkorb.');
+    const txt=new TextDecoder().decode(await download(SET.dataFileId));
+    const o=JSON.parse(txt);
+    if(!o||!Array.isArray(o.kunden))throw new Error('Die Datei ist keine pdm_projects.json (die Liste „kunden“ fehlt).');
+    DATA=o;META={name:m.name,loadedAt:Date.now(),modifiedTime:m.modifiedTime};
+    LS.set('vanta_data',DATA);LS.set('vanta_meta',META);
+    if(!silent)toast('Daten aktualisiert.');
+  }catch(e){
+    if(e instanceof AuthErr)toast('Anmeldung abgelaufen. Bitte neu anmelden.');
+    else toast('Laden fehlgeschlagen: '+e.message);
+  }finally{loadingData=false;render()}
+}
+
+// ════════════ Daten-Auswertung ════════════
+const K=()=>(DATA&&DATA.kunden)||[];
+function projHours(p){let h=0;(p.tasks||[]).forEach(t=>(t.zeiteintraege||[]).forEach(z=>h+=+z.stunden||0));return h}
+function projMenge(p){let v=0;(p.tasks||[]).forEach(t=>{if(t.art==='menge'&&!t.in_pauschale)v+=(+t.menge||0)*(+t.vk||0)});return v}
+function projValue(p,k){if(p.abrechnungstyp==='pauschal')return +p.pauschalpreis||0;return projHours(p)*(+p.stundensatz||+k.stundensatz||0)+projMenge(p)}
+function projPaid(p){return (p.zahlungen||[]).reduce((a,z)=>a+(+z.betrag||0),0)}
+const isActive=s=>s==='aktiv'||s==='laufend';
+function lastDate(p){let d=0;(p.tasks||[]).forEach(t=>(t.zeiteintraege||[]).forEach(z=>{const x=pd(z.datum);if(x&&+x>d)d=+x}));return d}
+const pkey=(k,p)=>p.id||('x:'+k.name+'|'+(p.nummer||'')+'|'+one(p.name));
+function allEntries(){
+  const out=[];
+  K().forEach((k,ki)=>(k.projekte||[]).forEach((p,pi)=>(p.tasks||[]).forEach(t=>(t.zeiteintraege||[]).forEach(z=>{const d=pd(z.datum);if(d)out.push({z,t,p,k,ki,pi,d})}))));
+  return out.sort((a,b)=>b.d-a.d||String(b.z.von).localeCompare(String(a.z.von)));
+}
+function allPayments(){
+  const out=[];
+  K().forEach((k,ki)=>(k.projekte||[]).forEach((p,pi)=>(p.zahlungen||[]).forEach(z=>{const d=pd(z.datum);if(d)out.push({z,p,k,ki,pi,d})})));
+  return out.sort((a,b)=>b.d-a.d);
+}
+function pathInfo(s){
+  if(!s)return null;
+  const n=String(s).replace(/\\/g,'/');
+  const m=/^[A-Z]:\/((?:Meine Ablage|My Drive)\/.*)$/i.exec(n);
+  if(m&&/^[GH]:/i.test(n))return {cls:'drive',loc:'Google Drive',p:m[1]};
+  if(/^C:\/Users\/[^/]+\/Downloads/i.test(n))return {cls:'pc',loc:'Nur am PC (Downloads)',p:n};
+  return {cls:'pc',loc:'Nur am PC',p:n};
+}
+
+// ════════════ Navigation (mit Zurück-Taste am Handy) ════════════
+let tab='start', stack=[{v:'start'}];
+const ui={openTasks:new Set(),zeitOpen:{},umsatzJahr:null,zeitQ:'',kundenQ:'',zeitPer:'alle'};
+const TABS=[['start','Start','haus'],['kunden','Kunden','kunden'],['zeiten','Zeiten','zeit'],['umsatz','Umsatz','umsatz'],['einstellungen','Einstellungen','zahnrad']];
+function push(){history.pushState({vanta:1},'')}
+function go(v){stack.push(v);push();render(true)}
+function uiBack(){history.back()}
+window.addEventListener('popstate',()=>{
+  if(ignorePops>0){ignorePops--;return}
+  if(!document.getElementById('pv').hidden){closePdf();return}
+  if(!document.getElementById('sheet').hidden){sheetBack();return}
+  if(stack.length>1){stack.pop();render(true)}
+});
+function setTab(t){tab=t;stack=[{v:t}];render(true)}
+
+function renderTabs(){
+  document.getElementById('tabs').innerHTML=TABS.map(([k,l,i])=>`<button data-tab="${k}" class="${tab===k?'on':''}" aria-label="${l}">${ic(i)}<span>${l==='Einstellungen'?'Einstell.':l}</span></button>`).join('');
+}
+function header(title,sub,right){
+  const b=stack.length>1?`<button class="back" data-act="back" aria-label="Zurück">${ic('back')}</button>`:'';
+  const brand=stack.length===1&&tab==='start'?`<span class="brand">V</span>`:'';
+  document.getElementById('top').innerHTML=`${b}${brand}<h1>${sub?`<span class="sub">${esc(sub)}</span>`:''}${esc(title)}</h1>${right||''}`;
+}
+const refreshBtn=()=>SET.dataFileId?`<button class="hbtn" data-act="reload" aria-label="Daten neu laden">${loadingData?'<span class="spin"></span>':ic('neu','s')}</button>`:'';
+
+function authBanner(){
+  if(!DATA||tokenValid())return '';
+  return `<div class="banner"><div class="main"><b>Nicht angemeldet</b><div class="note">Stand vom ${esc(META.loadedAt?fmtWhen(META.loadedAt):'–')}. Zum Aktualisieren und für Zeichnungen anmelden.</div></div><button class="btn small" data-act="login">Anmelden</button></div>`;
+}
+
+// ════════════ Ansichten ════════════
+function welcome(){
+  const signed=tokenValid();
+  return `<div class="card">
+    <h3>Willkommen bei Vanta PDM Mobil</h3>
+    <p class="note">Die App liest deine <span class="mono">pdm_projects.json</span> und deine Zeichnungen direkt aus Google Drive. Sie ändert nichts an deinen Dateien.</p>
+    <div class="list">
+      <div class="row"><div class="main"><div class="t">1 · Mit Google anmelden</div><div class="m">${signed?'Angemeldet als '+esc(AUTH.email||''):'Einmalig, danach ab und zu neu bestätigen'}</div></div>${signed?'<span class="pill aktiv">erledigt</span>':''}</div>
+      <div class="row"><div class="main"><div class="t">2 · Datendatei auswählen</div><div class="m">pdm_projects.json in deinem Drive</div></div></div>
+    </div>
+    ${signed?`<button class="btn" data-act="pickdata">${ic('dokument','s')}pdm_projects.json auswählen</button>`:`<button class="btn" data-act="login">${ic('google','s')}Mit Google anmelden</button>`}
+  </div>`;
+}
+
+function projRow(k,p,ki,pi,showKunde){
+  return `<button class="row" data-go="projekt" data-ki="${ki}" data-pi="${pi}">
+    <div class="main"><div class="t">${esc(one(p.name))}</div>
+    <div class="m"><span class="tag">${esc(p.nummer||'—')}</span>${showKunde?`<span>${esc(k.name)}</span>`:''}${isActive(p.status)?'<span class="pill aktiv">aktiv</span>':''}${SET.links[pkey(k,p)]?`<span style="color:var(--ok);display:inline-flex">${ic('dokument','s')}</span>`:''}</div></div>
+    <div class="r"><span class="num">${hrs(projHours(p))}</span><small class="num">${eur0(projValue(p,k))}</small></div>${ic('chev','s chev')}</button>`;
+}
+function entryRow(e){
+  const z=e.z;
+  return `<button class="row" data-go="projekt" data-ki="${e.ki}" data-pi="${e.pi}" data-task="${esc(e.t.id||e.t.name)}">
+    <div class="main"><div class="t">${esc(one(z.kommentar)||e.t.name)}</div>
+    <div class="m"><span class="mono">${esc(z.datum)}${z.von&&z.bis&&z.von!==z.bis?` · ${esc(z.von)}–${esc(z.bis)}`:''}</span><span class="tag">${esc(e.p.nummer||'')}</span><span>${esc(e.k.name)}</span></div></div>
+    <div class="r"><span class="num">${hrs(z.stunden)}</span></div></button>`;
+}
+
+function vStart(){
+  header('Vanta PDM','Mobil',refreshBtn());
+  if(!DATA)return welcome();
+  const now=new Date(),ents=allEntries();
+  const monday=new Date(now.getFullYear(),now.getMonth(),now.getDate()-((now.getDay()+6)%7));
+  let hw=0,hm=0;ents.forEach(e=>{if(e.d>=monday)hw+=+e.z.stunden||0;if(e.d.getFullYear()===now.getFullYear()&&e.d.getMonth()===now.getMonth())hm+=+e.z.stunden||0});
+  const uj=allPayments().filter(x=>x.d.getFullYear()===now.getFullYear()).reduce((a,x)=>a+(+x.z.betrag||0),0);
+  const act=[];K().forEach((k,ki)=>(k.projekte||[]).forEach((p,pi)=>{if(isActive(p.status))act.push({k,p,ki,pi,l:lastDate(p)})}));
+  act.sort((a,b)=>b.l-a.l);
+  return `${authBanner()}<div class="kpis">
+    <div class="kpi"><small>Diese Woche</small><div class="v">${h1(hw)}<u>h</u></div></div>
+    <div class="kpi"><small>${MON[now.getMonth()]}</small><div class="v">${h1(hm)}<u>h</u></div></div>
+    <div class="kpi"><small>Umsatz ${now.getFullYear()}</small><div class="v">${eur0(uj).replace(' €','')}<u>€</u></div></div>
+  </div>
+  <section class="sec"><h2>Aktive Projekte <span>${act.length}</span></h2>
+    <div class="list">${act.map(a=>projRow(a.k,a.p,a.ki,a.pi,true)).join('')||'<div class="empty">Keine aktiven Projekte.</div>'}</div></section>
+  <section class="sec"><h2>Letzte Zeiteinträge</h2>
+    <div class="list">${ents.slice(0,5).map(entryRow).join('')||'<div class="empty">Noch keine Zeiteinträge.</div>'}</div></section>`;
+}
+
+function vKunden(){
+  header('Kunden','',refreshBtn());
+  if(!DATA)return welcome();
+  const q=ui.kundenQ.toLowerCase();
+  const rows=K().map((k,ki)=>{
+    const ps=k.projekte||[];
+    const match=!q||k.name.toLowerCase().includes(q)||ps.some(p=>(one(p.name)+' '+(p.nummer||'')).toLowerCase().includes(q));
+    if(!match)return '';
+    const a=ps.filter(p=>isActive(p.status)).length,paid=ps.reduce((s,p)=>s+projPaid(p),0);
+    return `<button class="row" data-go="kunde" data-ki="${ki}"><div class="main"><div class="t">${esc(k.name)}</div>
+      <div class="m"><span>${ps.length} Projekt${ps.length===1?'':'e'}</span>${a?`<span class="pill aktiv">${a} aktiv</span>`:''}<span class="mono">${eur0(k.stundensatz)}/h</span></div></div>
+      <div class="r"><span class="num">${eur0(paid)}</span><small>bezahlt</small></div>${ic('chev','s chev')}</button>`;
+  }).join('');
+  return `<label class="search">${ic('suchen','s')}<input id="kq" type="search" placeholder="Kunde, Projekt oder Nummer" value="${esc(ui.kundenQ)}" autocomplete="off"></label>
+  <div class="list">${rows||'<div class="empty">Nichts gefunden.</div>'}</div>`;
+}
+
+function vKunde(ki){
+  const k=K()[ki];
+  header(k.name,'Kunde');
+  const ps=(k.projekte||[]).map((p,pi)=>({p,pi,l:lastDate(p)}));
+  const act=ps.filter(x=>isActive(x.p.status)).sort((a,b)=>b.l-a.l),done=ps.filter(x=>!isActive(x.p.status)).sort((a,b)=>b.l-a.l);
+  const h=ps.reduce((s,x)=>s+projHours(x.p),0),paid=ps.reduce((s,x)=>s+projPaid(x.p),0);
+  return `<div class="stats"><div><small>Stundensatz</small><span class="num">${eur(k.stundensatz)}</span></div><div><small>Projekte</small><span class="num">${ps.length}</span></div>
+    <div><small>Stunden gesamt</small><span class="num">${hrs(h)}</span></div><div><small>Bezahlt gesamt</small><span class="num">${eur(paid)}</span></div></div>
+  ${act.length?`<section class="sec"><h2>Aktiv <span>${act.length}</span></h2><div class="list">${act.map(x=>projRow(k,x.p,ki,x.pi)).join('')}</div></section>`:''}
+  ${done.length?`<section class="sec"><h2>Abgeschlossen <span>${done.length}</span></h2><div class="list">${done.map(x=>projRow(k,x.p,ki,x.pi)).join('')}</div></section>`:''}`;
+}
+
+function zeichnungenSection(k,p){
+  const key=pkey(k,p),link=SET.links[key];
+  if(!link){
+    return `<section class="sec"><h2>Zeichnungen</h2><div class="card">
+      <p class="note">Verknüpfe einmal den Ordner, in dem die Zeichnungs-PDFs dieses Projekts liegen. Danach öffnest du sie hier direkt.</p>
+      <button class="btn ghost" data-act="linkfolder" data-key="${esc(key)}">${ic('link','s')}Zeichnungsordner verknüpfen</button></div></section>`;
+  }
+  return `<section class="sec"><h2>Zeichnungen <button data-act="linkfolder" data-key="${esc(key)}">Ändern</button></h2>
+    <div class="note" style="margin:0 2px">${ic('ordner','s')} ${esc(link.name)}</div>
+    <div class="list" data-folder="${esc(link.id)}" data-key="${esc(key)}"></div></section>`;
+}
+
+function vProjekt(ki,pi){
+  const k=K()[ki],p=k.projekte[pi];
+  header(p.nummer||one(p.name),k.name);
+  const h=projHours(p),v=projValue(p,k),paid=projPaid(p),satz=+p.stundensatz||+k.stundensatz||0;
+  const pauschal=p.abrechnungstyp==='pauschal',offen=v-paid,pinf=pathInfo(p.ordner);
+  const tasks=(p.tasks||[]).map(t=>{
+    const key=t.id||t.name,open=ui.openTasks.has(key);
+    if(t.art==='menge'){
+      return `<div class="task"><div class="row" style="border:0"><div class="main"><div class="t">${esc(t.name)}</div>
+        <div class="m"><span class="mono">${(+t.menge||0).toLocaleString('de-AT')} ${esc(t.einheit||'')} × ${eur(t.vk)}</span><span class="mono">EK ${eur(t.ek)}</span>${t.in_pauschale?'<span class="pill">in Pauschale</span>':''}</div></div>
+        <div class="r"><span class="num">${eur((+t.menge||0)*(+t.vk||0))}</span></div></div></div>`;
+    }
+    const zs=(t.zeiteintraege||[]).slice().sort((a,b)=>(pd(b.datum)||0)-(pd(a.datum)||0));
+    const th=zs.reduce((s,z)=>s+(+z.stunden||0),0);
+    return `<div class="task ${open?'open':''}"><button data-task-toggle="${esc(key)}" aria-expanded="${open}">
+      <div class="main"><div class="t">${esc(t.name)}</div><div class="m"><span>${zs.length} Eintr${zs.length===1?'ag':'äge'}</span>${isActive(t.status)?'<span class="pill aktiv">aktiv</span>':'<span class="pill">abgeschlossen</span>'}</div></div>
+      <span class="num">${hrs(th)}</span>${ic('chev','s')}</button>
+      <div class="entries">${zs.map(entryDetail).join('')||'<div class="empty" style="padding:6px 0">Keine Einträge.</div>'}</div></div>`;
+  }).join('');
+  const kal=p.kalkulation&&(p.kalkulation.positionen||[]).length?p.kalkulation:null;
+  const kalSum=kal?kal.positionen.reduce((s,x)=>s+(+x.menge||0)*(+x.preis||0),0):0;
+  const zahl=(p.zahlungen||[]).slice().sort((a,b)=>(pd(b.datum)||0)-(pd(a.datum)||0));
+  return `<div class="card phead">
+    <div><div class="nr">${esc(p.nummer||'')}</div><h3>${esc(one(p.name))}</h3>
+    <div class="m"><span class="pill ${isActive(p.status)?'aktiv':''}">${esc(p.status||'—')}</span><span>${pauschal?'Pauschal':'Stundensatz '+eur0(satz)+'/h'}</span>${p.rechnung_nr?`<span class="mono">Rg. ${esc(p.rechnung_nr)}${p.rechnung_pos?' / Pos. '+esc(p.rechnung_pos):''}</span>`:''}</div></div>
+    <div class="stats"><div><small>Stunden</small><span class="num">${hrs(h)}</span></div><div><small>${pauschal?'Pauschale':'Wert'}</small><span class="num">${eur(v)}</span></div>
+    <div><small>Bezahlt</small><span class="num">${eur(paid)}</span></div><div><small>Offen</small><span class="num" style="color:${offen>0.005?'var(--warn)':'var(--muted)'}">${eur(Math.max(0,offen))}</span></div></div>
+    ${pauschal&&h>0?`<p class="note">Effektiver Stundensatz: <span class="mono">${eur(v/h)}/h</span></p>`:''}
+    ${p.beschreibung?`<div class="desc">${esc(p.beschreibung)}</div>`:''}
+    ${pinf?`<div class="path ${pinf.cls}">${ic('ordner','s')}<div><div class="loc">${pinf.loc}</div><div class="p">${esc(pinf.p)}</div></div></div>`:''}
+  </div>
+  ${zeichnungenSection(k,p)}
+  <section class="sec"><h2>Tasks <span>${(p.tasks||[]).length}</span></h2><div class="list">${tasks||'<div class="empty">Keine Tasks.</div>'}</div></section>
+  ${kal?`<section class="sec"><h2>Kalkulation <span>Stand ${esc(kal.stand||'')}</span></h2><div class="list kalk">
+    ${kal.positionen.map(x=>`<div class="pos"><span>${esc(x.text)}</span><span class="q">${(+x.menge||0).toLocaleString('de-AT')} ${esc(x.einheit||'')} × ${eur(x.preis)}</span><span class="s">${eur((+x.menge||0)*(+x.preis||0))}</span></div>`).join('')}
+    <div class="sum"><span>Summe netto</span><span class="num">${eur(kalSum)}</span></div></div></section>`:''}
+  <section class="sec"><h2>Zahlungen <span>${eur(paid)}</span></h2><div class="list">${zahl.map(z=>{const r=pathInfo(z.rechnung);return `<div class="row"><div class="main"><div class="t">${esc(z.kommentar||z.beschreibung||'Zahlung')}</div>
+    <div class="m"><span class="mono">${esc(z.datum)}</span>${r?`<span style="color:var(--${r.cls==='drive'?'ok':'warn'})">${r.cls==='drive'?'Rechnung auf Drive':'Rechnung nur am PC'}</span>`:''}</div></div><div class="r"><span class="num">${eur(z.betrag)}</span></div></div>`}).join('')||'<div class="empty">Noch keine Zahlungen.</div>'}</div></section>`;
+}
+function entryDetail(z){
+  return `<div class="entry"><span class="d">${esc(String(z.datum||'').slice(0,6))}</span><span class="c">${esc(z.kommentar)||'<span style="color:var(--dim)">ohne Kommentar</span>'}</span><span class="h">${(+z.stunden||0).toFixed(2).replace('.',',')}</span>${z.von&&z.bis&&z.von!==z.bis?`<span class="vb">${esc(z.von)}–${esc(z.bis)}${z.pause_min?` · ${z.pause_min} min Pause`:''}</span>`:''}</div>`;
+}
+
+function vOrdner(s){header(s.name,s.title||'Ordner');return `<div class="list" data-folder="${esc(s.fid)}"></div>`}
+
+// ── Zeiten: nach Kunde → Projekt ──
+function periodRange(){
+  const n=new Date(),y=n.getFullYear(),m=n.getMonth();
+  switch(ui.zeitPer){
+    case 'monat':return [new Date(y,m,1),new Date(y,m+1,1)];
+    case 'vormonat':return [new Date(y,m-1,1),new Date(y,m,1)];
+    case 'jahr':return [new Date(y,0,1),new Date(y+1,0,1)];
+    default:return [null,null];
+  }
+}
+function vZeiten(){
+  header('Zeiten','',refreshBtn());
+  if(!DATA)return welcome();
+  const [from,to]=periodRange(),q=ui.zeitQ.toLowerCase();
+  const kunden=[];let total=0;
+  K().forEach((k,ki)=>{
+    const projs=[];
+    (k.projekte||[]).forEach((p,pi)=>{
+      const es=[];
+      (p.tasks||[]).forEach(t=>(t.zeiteintraege||[]).forEach(z=>{
+        const d=pd(z.datum);if(!d)return;
+        if(from&&(d<from||d>=to))return;
+        if(q&&!((z.kommentar||'')+' '+t.name+' '+one(p.name)+' '+(p.nummer||'')+' '+k.name).toLowerCase().includes(q))return;
+        es.push({z,t,d});
+      }));
+      if(!es.length)return;
+      es.sort((a,b)=>b.d-a.d||String(b.z.von).localeCompare(String(a.z.von)));
+      const h=es.reduce((s,e)=>s+(+e.z.stunden||0),0);
+      projs.push({p,pi,es,h,last:+es[0].d,act:isActive(p.status)});
+    });
+    if(!projs.length)return;
+    projs.sort((a,b)=>(b.act-a.act)||(b.last-a.last));
+    const h=projs.reduce((s,x)=>s+x.h,0);total+=h;
+    kunden.push({k,ki,projs,h,last:Math.max(...projs.map(x=>x.last))});
+  });
+  kunden.sort((a,b)=>b.last-a.last);
+  const per=[['alle','Alle'],['monat','Dieser Monat'],['vormonat','Letzter Monat'],['jahr','Dieses Jahr']];
+  return `<div class="chips">${per.map(([k,l])=>`<button class="chip ${ui.zeitPer===k?'on':''}" data-per="${k}">${l}</button>`).join('')}</div>
+  <label class="search">${ic('suchen','s')}<input id="zq" type="search" placeholder="Kommentar, Projekt oder Kunde" value="${esc(ui.zeitQ)}" autocomplete="off"></label>
+  <div class="kv" style="margin:0 2px"><span>Summe im Zeitraum</span><span class="num"><b>${hrs(total)}</b></span></div>
+  ${kunden.map(g=>`<section class="kgroup"><div class="khead"><b>${esc(g.k.name)}</b><span>${hrs(g.h)}</span></div>
+    <div class="list">${g.projs.map(x=>{
+      const key=pkey(g.k,x.p);
+      const open=key in ui.zeitOpen?ui.zeitOpen[key]:(x.act||!!q);
+      return `<div class="task ${open?'open':''}"><button data-zeit-toggle="${esc(key)}" aria-expanded="${open}">
+        <div class="main"><div class="t">${esc(one(x.p.name))}</div><div class="m"><span class="tag">${esc(x.p.nummer||'—')}</span><span>${x.es.length} Eintr${x.es.length===1?'ag':'äge'}</span>${x.act?'<span class="pill aktiv">aktiv</span>':''}</div></div>
+        <span class="num">${hrs(x.h)}</span>${ic('chev','s')}</button>
+        <div class="entries">${x.es.map(e=>entryDetail(e.z)).join('')}
+        <button class="openp" data-go="projekt" data-ki="${g.ki}" data-pi="${x.pi}">Projekt öffnen ${ic('chev','s')}</button></div></div>`;
+    }).join('')}</div></section>`).join('')||'<div class="list"><div class="empty">Keine Zeiteinträge im gewählten Zeitraum.</div></div>'}`;
+}
+
+function vUmsatz(){
+  header('Umsatz','',refreshBtn());
+  if(!DATA)return welcome();
+  const pay=allPayments();
+  const years=[...new Set(pay.map(x=>x.d.getFullYear()))].sort((a,b)=>b-a);
+  if(ui.umsatzJahr==null||!years.includes(ui.umsatzJahr))ui.umsatzJahr=years[0]||new Date().getFullYear();
+  const Y=ui.umsatzJahr,yp=pay.filter(x=>x.d.getFullYear()===Y);
+  const months=Array(12).fill(0);yp.forEach(x=>months[x.d.getMonth()]+=+x.z.betrag||0);
+  const total=months.reduce((a,b)=>a+b,0),max=Math.max(...months,1);
+  const byK={};yp.forEach(x=>{byK[x.k.name]=(byK[x.k.name]||0)+(+x.z.betrag||0)});
+  const ks=Object.entries(byK).sort((a,b)=>b[1]-a[1]);
+  return `<div class="chips">${years.map(y=>`<button class="chip m ${y===Y?'on':''}" data-jahr="${y}">${y}</button>`).join('')}</div>
+  <div class="kpis" style="grid-template-columns:1fr 1fr">
+    <div class="kpi"><small>Umsatz ${Y}</small><div class="v">${eur(total)}</div></div>
+    <div class="kpi"><small>Zahlungen</small><div class="v">${yp.length}</div></div></div>
+  <section class="sec"><h2>Nach Monat</h2><div class="list bars">
+    ${months.map((v,i)=>`<div class="bar ${v?'':'zero'}"><span class="l">${MONK[i]}</span><div class="track"><div class="fill" style="width:${(v/max*100).toFixed(1)}%"></div></div><span class="v">${v?eur0(v):'–'}</span></div>`).join('')}
+  </div></section>
+  <section class="sec"><h2>Nach Kunde</h2><div class="list">${ks.map(([n,v])=>`<div class="row"><div class="main"><div class="t">${esc(n)}</div><div class="m">${total?Math.round(v/total*100):0} % vom Jahr</div></div><div class="r"><span class="num">${eur(v)}</span></div></div>`).join('')||'<div class="empty">Keine Zahlungen.</div>'}</div></section>
+  <section class="sec"><h2>Zahlungen ${Y}</h2><div class="list">${yp.map(x=>`<button class="row" data-go="projekt" data-ki="${x.ki}" data-pi="${x.pi}"><div class="main"><div class="t">${esc(x.z.kommentar||'Zahlung')}</div>
+    <div class="m"><span class="mono">${esc(x.z.datum)}</span><span class="tag">${esc(x.p.nummer||'')}</span><span>${esc(x.k.name)}</span></div></div><div class="r"><span class="num">${eur(x.z.betrag)}</span></div></button>`).join('')||'<div class="empty">Keine Zahlungen.</div>'}</div></section>`;
+}
+
+function vEinstellungen(){
+  header('Einstellungen');
+  const signed=tokenValid();
+  // Verknüpfungen mit Projektnamen
+  const names={};K().forEach(k=>(k.projekte||[]).forEach(p=>names[pkey(k,p)]={n:(p.nummer?p.nummer+' · ':'')+one(p.name),k:k.name}));
+  const links=Object.entries(SET.links||{});
+  const themes=[['system','System'],['light','Hell'],['dark','Dunkel']];
+  return `<section class="sec"><h2>Google-Konto</h2><div class="card">
+    ${AUTH.email?`<div class="kv"><span>Konto</span><span>${esc(AUTH.email)}</span></div>`:''}
+    <div class="kv"><span>Status</span><span>${signed?'<span style="color:var(--ok)">Angemeldet</span>':'Nicht angemeldet'}</span></div>
+    ${signed?`<button class="btn ghost" data-act="logout">Abmelden</button>`:`<button class="btn" data-act="login">${ic('google','s')}Mit Google anmelden</button>`}
+    <p class="note">Die Anmeldung gilt etwa eine Stunde. Danach tippst du einmal auf „Anmelden“, ein Passwort brauchst du dabei normalerweise nicht.</p>
+  </div></section>
+
+  <section class="sec"><h2>Datendatei</h2><div class="card">
+    <div class="kv"><span>Datei</span><span class="mono">${esc(SET.dataFileName||'nicht ausgewählt')}</span></div>
+    ${META.loadedAt?`<div class="kv"><span>Geladen</span><span>${esc(fmtWhen(META.loadedAt))}</span></div>`:''}
+    ${META.modifiedTime?`<div class="kv"><span>Zuletzt geändert</span><span>${esc(fmtWhen(META.modifiedTime))}</span></div>`:''}
+    <div class="btnrow">
+      <button class="btn ${SET.dataFileId?'ghost':''}" data-act="pickdata" style="flex:1">${ic('dokument','s')}${SET.dataFileId?'Andere Datei':'pdm_projects.json auswählen'}</button>
+      ${SET.dataFileId?`<button class="btn" data-act="reload" style="flex:1" ${loadingData?'disabled':''}>${ic('neu','s')}Neu laden</button>`:''}
+    </div>
+  </div></section>
+
+  <section class="sec"><h2>Verknüpfte Zeichnungsordner <span>${links.length}</span></h2><div class="list">
+    ${links.map(([key,l])=>`<div class="row"><div class="main"><div class="t">${esc(names[key]?names[key].n:'Projekt nicht mehr vorhanden')}</div><div class="m">${ic('ordner','s')}<span>${esc(l.name)}</span></div></div><button class="linkbtn" data-act="unlink" data-key="${esc(key)}">Lösen</button></div>`).join('')||'<div class="empty">Noch keine. Verknüpfen kannst du im jeweiligen Projekt unter „Zeichnungen“.</div>'}
+  </div></section>
+
+  <section class="sec"><h2>Anzeige</h2><div class="card">
+    <div class="seg">${themes.map(([k,l])=>`<button class="${SET.theme===k?'on':''}" data-theme-set="${k}">${l}</button>`).join('')}</div>
+    <div class="swatches">${Object.entries(ACCENTS).map(([k,c])=>`<button class="sw ${SET.accent===k?'on':''}" data-accent="${k}" aria-label="${k}"><i style="background:${c}"></i></button>`).join('')}</div>
+  </div></section>
+
+  <section class="sec"><h2>Über</h2><div class="card">
+    <div class="kv"><span>Version</span><span class="mono">${VERSION}</span></div>
+    <p class="note">Die App liest nur. Deine Einstellungen und Verknüpfungen liegen in einem versteckten App-Ordner auf deinem Drive und gelten auf jedem Gerät.</p>
+    <button class="btn ghost" data-act="wipe">Gespeicherte Daten von diesem Handy löschen</button>
+  </div></section>`;
+}
+
+// ════════════ Rendern ════════════
+function viewHtml(){
+  const s=stack[stack.length-1];
+  const tabs={start:vStart,kunden:vKunden,zeiten:vZeiten,umsatz:vUmsatz,einstellungen:vEinstellungen};
+  if(tabs[s.v])return tabs[s.v]();
+  const k=K()[s.ki];
+  if(s.v==='kunde'&&k)return vKunde(s.ki);
+  if(s.v==='projekt'&&k&&(k.projekte||[])[s.pi])return vProjekt(s.ki,s.pi);
+  if(s.v==='ordner')return vOrdner(s);
+  stack=[{v:tab}];return tabs[tab]();   // Eintrag existiert nach Neuladen nicht mehr
+}
+function render(scrollTop){
+  renderTabs();
+  let html='';
+  try{html=viewHtml()}
+  catch(e){console.error(e);html=`<div class="card"><b>Die Daten konnten nicht angezeigt werden.</b><p class="note">${esc(e.message)}. Wähle unter „Einstellungen“ eine gültige pdm_projects.json.</p></div>`}
+  document.getElementById('view').innerHTML=html;
+  document.querySelectorAll('#view [data-folder]').forEach(el=>fillFolder(el));
+  if(scrollTop)window.scrollTo(0,0);
+}
+
+// Ordnerinhalt (Zeichnungen) nachladen
+const folderCache={};
+async function fillFolder(el){
+  const id=el.dataset.folder;
+  const draw=items=>{
+    const folders=items.filter(f=>f.mimeType===FOLDER);
+    const pdfs=items.filter(f=>f.mimeType==='application/pdf'||/\.pdf$/i.test(f.name));
+    const other=items.length-folders.length-pdfs.length;
+    el.innerHTML=folders.map(f=>`<button class="row" data-go="ordner" data-fid="${esc(f.id)}" data-fname="${esc(f.name)}">${ic('ordner','s ic')}<div class="main"><div class="t">${esc(f.name)}</div></div>${ic('chev','s chev')}</button>`).join('')
+      +pdfs.map(f=>`<button class="row" data-pdf="${esc(f.id)}" data-name="${esc(f.name)}">${ic('dokument','s ic pdf')}<div class="main"><div class="t wrap">${esc(f.name.replace(/\.pdf$/i,''))}</div><div class="m"><span class="mono">${f.modifiedTime?esc(new Date(f.modifiedTime).toLocaleDateString('de-AT')):''}</span><span class="mono">${f.size?fmtSize(f.size):''}</span></div></div></button>`).join('')
+      +(other>0?`<div class="empty">${other} weitere Datei${other===1?'':'en'} (keine PDF)</div>`:'')
+      +(!items.length?'<div class="empty">Dieser Ordner ist leer.</div>':'');
+  };
+  const c=folderCache[id];
+  if(c&&Date.now()-c.t<120000){draw(c.items);return}
+  if(!tokenValid()){
+    el.innerHTML=`<div class="row"><div class="main"><div class="t">Anmeldung nötig</div><div class="m">Zum Anzeigen der Zeichnungen bei Google anmelden.</div></div><button class="btn small" data-act="login">Anmelden</button></div>`;return;
+  }
+  el.innerHTML='<div class="loading"><span class="spin"></span>Lade Ordner …</div>';
+  try{
+    const items=await listChildren(id);folderCache[id]={t:Date.now(),items};
+    if(el.isConnected)draw(items);
+  }catch(e){
+    if(!el.isConnected)return;
+    if(e instanceof AuthErr){el.innerHTML=`<div class="row"><div class="main"><div class="t">Anmeldung abgelaufen</div></div><button class="btn small" data-act="login">Anmelden</button></div>`;return}
+    const gone=/not found|File not found/i.test(e.message);
+    el.innerHTML=`<div class="row"><div class="main"><div class="t">${gone?'Ordner nicht gefunden':'Ordner konnte nicht geladen werden'}</div><div class="m">${gone?'Er wurde gelöscht oder du hast keinen Zugriff mehr. Bitte neu verknüpfen.':esc(e.message)}</div></div>${el.dataset.key?`<button class="btn small" data-act="linkfolder" data-key="${esc(el.dataset.key)}">Neu verknüpfen</button>`:''}</div>`;
+  }
+}
+
+// ════════════ Ordner- / Dateiauswahl ════════════
+let SH=null; // {mode:'link'|'data', key, chain:[{id,name}], items, loading, err}
+function projectByKey(key){for(const k of K())for(const p of (k.projekte||[]))if(pkey(k,p)===key)return {k,p};return null}
+async function openSheet(mode,key){
+  if(!tokenValid()){needLogin(()=>openSheet(mode,key));return}
+  SH={mode,key,chain:[{id:'root',name:'Meine Ablage'}],items:null,loading:true,depth:1};
+  document.getElementById('sheet').hidden=false;push();drawSheet();
+  try{
+    if(mode==='link'){
+      const pr=projectByKey(key),cur=SET.links[key];
+      if(pr&&pr.p.ordner&&pathInfo(pr.p.ordner).cls==='drive')SH.chain=await resolvePath(pr.p.ordner);
+      else if(cur)SH.chain=[{id:'root',name:'Meine Ablage'}];
+    }else if(mode==='data'&&SET.dataFileId){
+      // beim bisherigen Ordner starten
+      try{const m=await api('files/'+SET.dataFileId,{fields:'parents',supportsAllDrives:'true'});if(m.parents&&m.parents[0]){const pm=await api('files/'+m.parents[0],{fields:'id,name',supportsAllDrives:'true'});SH.chain.push({id:pm.id,name:pm.name})}}catch(e){}
+    }
+  }catch(e){if(e instanceof AuthErr){closeSheet();needLogin(()=>openSheet(mode,key));return}}
+  if(!SH)return;
+  while(SH.depth<SH.chain.length){push();SH.depth++}   // je Ordnerebene ein Zurück-Schritt
+  await loadSheet();
+}
+async function loadSheet(){
+  const cur=SH.chain[SH.chain.length-1];SH.loading=true;SH.err=null;drawSheet();
+  try{SH.items=await listChildren(cur.id)}catch(e){SH.items=[];SH.err=e instanceof AuthErr?'Anmeldung abgelaufen. Schließe das Fenster und melde dich neu an.':e.message}
+  SH.loading=false;drawSheet();
+}
+function drawSheet(){
+  const el=document.getElementById('sheet');if(!SH)return;
+  const cur=SH.chain[SH.chain.length-1];
+  const pr=SH.mode==='link'?projectByKey(SH.key):null;
+  const title=SH.mode==='link'?'Zeichnungsordner wählen':'Datendatei wählen';
+  const sub=SH.mode==='link'&&pr?(pr.p.nummer||one(pr.p.name)):'Google Drive';
+  let body='';
+  if(SH.loading)body='<div class="list"><div class="loading"><span class="spin"></span>Lade …</div></div>';
+  else if(SH.err)body=`<div class="list"><div class="empty">${esc(SH.err)}</div></div>`;
+  else{
+    const items=SH.items||[];
+    const folders=items.filter(f=>f.mimeType===FOLDER);
+    const files=SH.mode==='data'?items.filter(f=>/\.json$/i.test(f.name)):items.filter(f=>f.mimeType==='application/pdf'||/\.pdf$/i.test(f.name));
+    body=`<div class="list">${folders.map(f=>`<button class="row" data-sh-open="${esc(f.id)}" data-name="${esc(f.name)}">${ic('ordner','s ic')}<div class="main"><div class="t">${esc(f.name)}</div></div>${ic('chev','s chev')}</button>`).join('')}
+      ${SH.mode==='data'?files.map(f=>`<button class="row" data-sh-file="${esc(f.id)}" data-name="${esc(f.name)}">${ic('dokument','s ic pdf')}<div class="main"><div class="t">${esc(f.name)}</div><div class="m"><span class="mono">${f.modifiedTime?esc(fmtWhen(f.modifiedTime)):''}</span></div></div></button>`).join('')
+        :files.map(f=>`<div class="row dim">${ic('dokument','s ic')}<div class="main"><div class="t">${esc(f.name)}</div></div></div>`).join('')}
+      ${!folders.length&&!files.length?`<div class="empty">${SH.mode==='data'?'Keine Unterordner oder JSON-Dateien hier.':'Keine Unterordner oder PDFs hier.'}</div>`:''}</div>`;
+    if(SH.mode==='link')body=`<p class="note">${files.length} PDF${files.length===1?'':'s'} in diesem Ordner.</p>`+body;
+  }
+  el.innerHTML=`<div class="ohead"><button class="hbtn" data-act="sheetback" aria-label="Zurück">${ic(SH.chain.length>1?'back':'close')}</button><h2><small>${esc(sub)}</small>${esc(title)}</h2>${SH.chain.length>1?`<button class="hbtn" data-act="sheetclose" aria-label="Schließen">${ic('close','s')}</button>`:''}</div>
+    <div class="obody"><div class="crumbs">${SH.chain.map(c=>esc(c.name)).join(' / ')}</div>${body}</div>
+    ${SH.mode==='link'?`<div class="ofoot"><button class="btn" data-act="sheetpick" ${SH.loading||cur.id==='root'?'disabled':''}>${ic('link','s')}„${esc(cur.name)}“ verknüpfen</button></div>`:''}`;
+}
+function sheetBack(){ // wird von popstate aufgerufen (Zurück-Taste oder Pfeil)
+  if(!SH)return;
+  SH.depth--;
+  if(SH.chain.length>1&&SH.depth>0){SH.chain.pop();loadSheet()}
+  else{document.getElementById('sheet').hidden=true;SH=null}
+}
+let ignorePops=0;
+function closeSheet(){ // schließt komplett und räumt die Zurück-Schritte weg
+  const n=SH?SH.depth:0;document.getElementById('sheet').hidden=true;SH=null;
+  if(n>0){ignorePops++;history.go(-n)}
+}
+
+// ════════════ PDF-Reader ════════════
+let PV=null;
+function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>no(new Error('PDF-Reader konnte nicht geladen werden (Internet?).'));document.head.appendChild(s)})}
+let pdfReady=null;
+function loadPdfJs(){
+  if(!pdfReady)pdfReady=(async()=>{
+    await loadScript(PDFJS);
+    try{const w=await (await fetch(PDFJS_W)).text();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([w],{type:'text/javascript'}))}
+    catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_W}
+  })().catch(e=>{pdfReady=null;throw e});
+  return pdfReady;
+}
+const MAXPX=12e6; // Grenze pro Seite (iPhone erlaubt max. ~16,7 Mio. Pixel je Canvas)
+function pvShell(name,inner,bar){
+  const el=document.getElementById('pv');
+  el.innerHTML=`<div class="ohead"><button class="hbtn" data-act="pvclose" aria-label="Schließen">${ic('close')}</button><h2><small>Zeichnung</small>${esc(name)}</h2>${PV&&PV.id?`<a class="hbtn" href="https://drive.google.com/file/d/${encodeURIComponent(PV.id)}/view" target="_blank" rel="noopener" aria-label="In Google Drive öffnen">${ic('extern','s')}</a>`:''}</div>${inner}${bar||''}`;
+}
+async function openPdf(id,name){
+  if(!tokenValid()){needLogin(()=>openPdf(id,name));return}
+  PV={id,name,z:1,pages:[],gen:0};
+  const el=document.getElementById('pv');el.hidden=false;push();document.body.style.overflow='hidden';
+  const msg=t=>pvShell(name,`<div class="pvs" style="display:flex"><div class="pvmsg"><span class="spin"></span><div>${t}</div></div></div>`);
+  msg('Lade Zeichnung …');
+  try{
+    const [buf]=await Promise.all([download(id,n=>{if(PV&&PV.id===id)msg('Lade Zeichnung … '+fmtSize(n))}),loadPdfJs()]);
+    if(!PV||PV.id!==id)return;
+    msg('Bereite Anzeige vor …');
+    const doc=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+    if(!PV||PV.id!==id){doc.destroy();return}
+    PV.doc=doc;
+    for(let i=1;i<=doc.numPages;i++){const pg=await doc.getPage(i);const vp=pg.getViewport({scale:1});PV.pages.push({pg,w:vp.width,h:vp.height,px:0,task:null})}
+    buildViewer();
+  }catch(e){
+    if(!PV)return;
+    const auth=e instanceof AuthErr;
+    pvShell(name,`<div class="pvs" style="display:flex"><div class="pvmsg"><b>${auth?'Anmeldung abgelaufen':'Die Zeichnung konnte nicht geöffnet werden.'}</b><div>${auth?'Schließe den Reader und melde dich neu an.':esc(e.message)}</div><a href="https://drive.google.com/file/d/${encodeURIComponent(id)}/view" target="_blank" rel="noopener">In Google Drive öffnen</a></div></div>`);
+  }
+}
+function buildViewer(){
+  pvShell(PV.name,`<div class="pvs" id="pvs"><div class="pvin" id="pvin">${PV.pages.map((p,i)=>`<div class="pg" data-i="${i}"><span class="pn">${i+1}</span><canvas></canvas></div>`).join('')}</div></div>`,
+   `<div class="pvbar"><button class="hbtn" data-act="zout" aria-label="Verkleinern">${ic('minus','s')}</button><button class="hbtn" data-act="zin" aria-label="Vergrößern">${ic('plus','s')}</button><span class="pc" id="pvpc">1 / ${PV.pages.length}</span><button class="hbtn" data-act="zfit" aria-label="Auf Breite">${ic('breite','s')}</button></div>`);
+  const sc=document.getElementById('pvs');PV.sc=sc;PV.inner=document.getElementById('pvin');
+  PV.els=[...PV.inner.querySelectorAll('.pg')];
+  layout();
+  PV.io=new IntersectionObserver(ents=>ents.forEach(en=>{const i=+en.target.dataset.i;if(en.isIntersecting)renderPage(i);else unrender(i)}),{root:sc,rootMargin:'150% 50%'});
+  PV.els.forEach(e=>PV.io.observe(e));
+  sc.addEventListener('scroll',pageCounter,{passive:true});
+  addGestures(sc);
+}
+function pageScale(i){const cw=PV.sc.clientWidth-16;return cw/PV.pages[i].w*PV.z}
+function layout(){PV.els.forEach((e,i)=>{const s=pageScale(i);e.style.width=Math.round(PV.pages[i].w*s)+'px';e.style.height=Math.round(PV.pages[i].h*s)+'px'})}
+async function renderPage(i){
+  const p=PV.pages[i],css=pageScale(i),dpr=window.devicePixelRatio||1;
+  const px=Math.min(css*dpr,Math.sqrt(MAXPX/(p.w*p.h)));
+  if(Math.abs(p.px-px)<.01)return;
+  if(p.task){try{p.task.cancel()}catch(e){}}
+  const vp=p.pg.getViewport({scale:px});
+  const cv=document.createElement('canvas');cv.width=Math.floor(vp.width);cv.height=Math.floor(vp.height);
+  p.px=px;const gen=PV.gen;
+  p.task=p.pg.render({canvasContext:cv.getContext('2d'),viewport:vp});
+  try{await p.task.promise}catch(e){return}
+  if(!PV||gen!==PV.gen||p.px!==px)return;
+  const old=PV.els[i].querySelector('canvas');old.replaceWith(cv);old.width=0;old.height=0;
+  p.task=null;
+}
+function unrender(i){const p=PV.pages[i];if(!p.px)return;if(p.task){try{p.task.cancel()}catch(e){}p.task=null}p.px=0;const c=PV.els[i].querySelector('canvas');c.width=0;c.height=0}
+function visibleRerender(){const r=PV.sc.getBoundingClientRect();PV.els.forEach((e,i)=>{const b=e.getBoundingClientRect();if(b.bottom>r.top-r.height&&b.top<r.bottom+r.height)renderPage(i)})}
+function setZoom(z,cx,cy){
+  z=Math.max(1,Math.min(8,z));const f=z/PV.z;if(Math.abs(f-1)<.001)return;
+  const sc=PV.sc;if(cx==null){cx=sc.clientWidth/2;cy=sc.clientHeight/2}
+  const sl=sc.scrollLeft,st=sc.scrollTop;
+  PV.z=z;PV.gen++;layout();
+  sc.scrollLeft=(sl+cx)*f-cx;sc.scrollTop=(st+cy)*f-cy;
+  PV.pages.forEach(p=>{p.px=p.px?-1:0});visibleRerender();
+}
+function pageCounter(){
+  const r=PV.sc.getBoundingClientRect(),mid=r.top+r.height/3;let cur=0;
+  PV.els.forEach((e,i)=>{if(e.getBoundingClientRect().top<=mid)cur=i});
+  const el=document.getElementById('pvpc');if(el)el.textContent=(cur+1)+' / '+PV.pages.length;
+}
+function addGestures(sc){
+  let pin=null,lastTap=0,moved=false;
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  sc.addEventListener('touchstart',e=>{
+    moved=false;
+    if(e.touches.length===2){
+      const r=sc.getBoundingClientRect();
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left,my=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top;
+      pin={d0:dist(e.touches),z0:PV.z,mx,my,f:1};
+      PV.inner.style.transformOrigin=(sc.scrollLeft+mx)+'px '+(sc.scrollTop+my)+'px';
+    }
+  },{passive:true});
+  sc.addEventListener('touchmove',e=>{
+    moved=true;
+    if(pin&&e.touches.length===2){
+      e.preventDefault();
+      const z=Math.max(1,Math.min(8,pin.z0*dist(e.touches)/pin.d0));pin.f=z/pin.z0;
+      PV.inner.style.transform='scale('+pin.f+')';
+    }
+  },{passive:false});
+  sc.addEventListener('touchend',e=>{
+    if(pin&&e.touches.length<2){
+      const p=pin;pin=null;PV.inner.style.transform='';
+      setZoom(p.z0*p.f,p.mx,p.my);return;
+    }
+    if(!moved&&e.changedTouches.length===1&&e.touches.length===0){
+      const now=Date.now();
+      if(now-lastTap<300){
+        const r=sc.getBoundingClientRect(),t=e.changedTouches[0];
+        setZoom(PV.z>1.2?1:2.5,t.clientX-r.left,t.clientY-r.top);lastTap=0;
+      }else lastTap=now;
+    }
+  });
+  sc.addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();const r=sc.getBoundingClientRect();setZoom(PV.z*(e.deltaY<0?1.15:1/1.15),e.clientX-r.left,e.clientY-r.top)}},{passive:false});
+}
+function closePdf(){
+  const el=document.getElementById('pv');el.hidden=true;el.innerHTML='';document.body.style.overflow='';
+  if(PV){if(PV.io)PV.io.disconnect();if(PV.doc)PV.doc.destroy();PV=null}
+}
+
+// ════════════ Ereignisse ════════════
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('button');if(!b)return;
+  const d=b.dataset;
+  if(d.tab){setTab(d.tab);return}
+  switch(d.act){
+    case 'back':uiBack();return;
+    case 'login':signIn();return;
+    case 'logout':signOut();return;
+    case 'reload':if(!tokenValid())needLogin(()=>loadData());else loadData();return;
+    case 'pickdata':openSheet('data');return;
+    case 'linkfolder':openSheet('link',d.key);return;
+    case 'unlink':delete SET.links[d.key];saveSettings();render();toast('Verknüpfung gelöst.');return;
+    case 'wipe':['vanta_data','vanta_meta','vanta_settings','vanta_auth'].forEach(LS.del);DATA=null;META={};AUTH={};SET={dataFileId:'',dataFileName:'',links:{},theme:'system',accent:'rot'};applyTheme();stack=[{v:tab}];render();toast('Daten von diesem Handy gelöscht. Deine Dateien auf Drive sind unverändert.');return;
+    case 'sheetback':uiBack();return;
+    case 'sheetclose':closeSheet();return;
+    case 'sheetpick':{
+      const cur=SH.chain[SH.chain.length-1];
+      SET.links[SH.key]={id:cur.id,name:cur.name,path:SH.chain.slice(1).map(c=>c.name).join('/')};
+      delete folderCache[cur.id];saveSettings();closeSheet();setTimeout(render,50);toast('Ordner verknüpft.');return;
+    }
+    case 'pvclose':uiBack();return;
+    case 'zin':setZoom(PV.z*1.5);return;
+    case 'zout':setZoom(PV.z/1.5);return;
+    case 'zfit':setZoom(1);return;
+  }
+  if(d.shOpen){SH.chain.push({id:d.shOpen,name:d.name});SH.depth++;push();loadSheet();return}
+  if(d.shFile){SET.dataFileId=d.shFile;SET.dataFileName=d.name;saveSettings();closeSheet();setTimeout(()=>loadData(),50);return}
+  if(d.pdf){openPdf(d.pdf,d.name);return}
+  if(d.per){ui.zeitPer=d.per;render();return}
+  if(d.jahr){ui.umsatzJahr=+d.jahr;render();return}
+  if(d.themeSet){SET.theme=d.themeSet;applyTheme();saveSettings();render();return}
+  if(d.accent){SET.accent=d.accent;applyTheme();saveSettings();render();return}
+  if(d.taskToggle){const k=d.taskToggle;ui.openTasks.has(k)?ui.openTasks.delete(k):ui.openTasks.add(k);b.parentElement.classList.toggle('open');b.setAttribute('aria-expanded',ui.openTasks.has(k));return}
+  if(d.zeitToggle){const k=d.zeitToggle,open=!b.parentElement.classList.contains('open');ui.zeitOpen[k]=open;b.parentElement.classList.toggle('open',open);b.setAttribute('aria-expanded',open);return}
+  if(d.go){
+    if(d.go==='ordner'){const cur=stack[stack.length-1];go({v:'ordner',fid:d.fid,name:d.fname,title:cur.v==='projekt'?(K()[cur.ki].projekte[cur.pi].nummer||'Zeichnungen'):cur.name});return}
+    if(d.task)ui.openTasks.add(d.task);
+    go({v:d.go,ki:+d.ki,pi:+d.pi});
+  }
+});
+document.addEventListener('input',ev=>{
+  const id=ev.target.id;if(id!=='zq'&&id!=='kq')return;
+  if(id==='zq')ui.zeitQ=ev.target.value;else ui.kundenQ=ev.target.value;
+  const pos=ev.target.selectionStart;render();
+  const el=document.getElementById(id);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}
+});
+window.addEventListener('resize',()=>{if(PV&&PV.els){layout();PV.pages.forEach(p=>{p.px=p.px?-1:0});visibleRerender()}});
+
+// Beim Öffnen: Daten aktualisieren, wenn angemeldet und älter als 5 Minuten
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&tokenValid()&&SET.dataFileId&&Date.now()-(META.loadedAt||0)>300000)loadData(true)});
+
+history.replaceState({vanta:0},'');
+render();
+if(tokenValid()){loadRemoteSettings().then(()=>{if(SET.dataFileId&&Date.now()-(META.loadedAt||0)>300000)return loadData(true)}).then(()=>render()).catch(()=>{})}
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="window.__gisLoaded&&window.__gisLoaded()"></script>
+</body>
+</html>

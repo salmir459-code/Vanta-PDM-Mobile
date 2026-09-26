@@ -1,0 +1,16 @@
+{
+  "name": "Vanta PDM Mobil",
+  "short_name": "Vanta",
+  "description": "Kunden, Projekte, Zeiten, Umsatz und Zeichnungen aus Vanta PDM am Handy",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0E1013",
+  "theme_color": "#0E1013",
+  "lang": "de",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
