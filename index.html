@@ -218,6 +218,24 @@ nav.tabs button.on{color:var(--accent-t)}
 
 .toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:#22272F;color:#E8EAED;padding:10px 14px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
 
+/* Kalkulation */
+.kalk .pos .kz{display:block;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.kalk .pos .apill{font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:99px;background:var(--s3);color:var(--muted);margin-left:4px}
+.kalk .pos .warnline{grid-column:1/3;font-size:12px;color:var(--warn)}
+.kalk .pos.fehlt{background:color-mix(in srgb,var(--warn) 7%,transparent)}
+.kalk .pos details{grid-column:1/3;font-size:13px}
+.kalk .pos summary{color:var(--accent-t);font-weight:600;cursor:pointer;padding:2px 0}
+.kalk .pos pre{white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin:6px 0 2px;background:var(--s2);border-radius:8px;padding:8px}
+.kalk .sub{display:flex;justify-content:space-between;padding:7px 14px;border-top:1px solid var(--border);font-size:13px;color:var(--muted)}
+.vgl .vg{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:2px 8px;padding:10px 14px;border-top:1px solid var(--border);font-size:13px;align-items:baseline}
+.vgl .vg:first-child{border-top:0}
+.vgl .vg .num{text-align:right;font-size:13px}
+.vgl .vgh{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600;padding-block:8px}
+.vgl .vgh span{text-align:right}
+.vgl .vgm{grid-column:1/5;font-size:12px;color:var(--muted)}
+.vgl .dimc{text-align:right;color:var(--dim);font-size:12px}
+.track.big{height:10px;border-radius:5px;background:var(--s2);overflow:hidden}
+.track.big .fill{height:100%;background:var(--accent);border-radius:5px}
 /* Formulare */
 .fgrid{display:grid;gap:12px}
 .fld{display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -265,7 +283,7 @@ const CFG={
   changesName:'mobile_changes.json',
   settingsName:'vanta_mobile.json'
 };
-const VERSION='Mobil 2.0';
+const VERSION='Mobil 2.1';
 const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 const PDFJS_W='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const FOLDER='application/vnd.google-apps.folder';
@@ -567,8 +585,19 @@ async function syncOps(){
 // ════════════ Daten-Auswertung ════════════
 const K=()=>(VIEW&&VIEW.kunden)||[];
 function projHours(p){let h=0;(p.tasks||[]).forEach(t=>(t.zeiteintraege||[]).forEach(z=>h+=+z.stunden||0));return h}
-function projMenge(p){let v=0;(p.tasks||[]).forEach(t=>{if(t.art==='menge'&&!t.in_pauschale)v+=(+t.menge||0)*(+t.vk||0)});return v}
-function projValue(p,k){if(p.abrechnungstyp==='pauschal')return +p.pauschalpreis||0;return projHours(p)*(+p.stundensatz||+k.stundensatz||0)+projMenge(p)}
+// Leistungen — dieselben Regeln wie leistungen.py am PC
+const taskArt=t=>{const a=String((t&&t.art)||'').trim().toLowerCase();return ['stunden','menge','fest'].includes(a)?a:'stunden'};
+const taskStunden=t=>(t.zeiteintraege||[]).reduce((s,z)=>s+(+z.stunden||0),0);
+function taskErloes(t,satz){const a=taskArt(t);if(a==='stunden')return taskStunden(t)*(+satz||0);if(a==='menge')return (+t.menge||0)*(+t.vk||0);return +t.vk||0}
+function taskAuslage(t){const a=taskArt(t);if(a==='stunden')return 0;if(a==='menge')return (+t.menge||0)*(+t.ek||0);return +t.ek||0}
+const projSatz=(p,k)=>+p.stundensatz||+k.stundensatz||0;
+function projValue(p,k){
+  const pausch=p.abrechnungstyp==='pauschal',satz=projSatz(p,k);
+  let v=pausch?(+p.pauschalpreis||0):0;
+  (p.tasks||[]).forEach(t=>{const a=taskArt(t);if(!pausch||(a!=='stunden'&&!t.in_pauschale))v+=taskErloes(t,satz)});
+  return Math.round(v*100)/100;
+}
+function projAuslagen(p){return (p.tasks||[]).reduce((s,t)=>s+taskAuslage(t),0)}
 function projPaid(p){return (p.zahlungen||[]).reduce((a,z)=>a+(+z.betrag||0),0)}
 const isActive=s=>s==='aktiv'||s==='laufend';
 function lastDate(p){let d=0;(p.tasks||[]).forEach(t=>(t.zeiteintraege||[]).forEach(z=>{const x=pd(z.datum);if(x&&+x>d)d=+x}));return d}
@@ -726,10 +755,12 @@ function vProjekt(ki,pi){
   const pauschal=p.abrechnungstyp==='pauschal',offen=v-paid,pinf=pathInfo(p.ordner);
   const tasks=(p.tasks||[]).map(t=>{
     const key=t.id||t.name,open=ui.openTasks.has(key);
-    if(t.art==='menge'){
+    const art=taskArt(t);
+    if(art!=='stunden'){
+      const erl=taskErloes(t,satz),aus=taskAuslage(t),th=taskStunden(t);
       return `<div class="task"><div class="row" style="border:0"><div class="main"><div class="t">${esc(t.name)}</div>
-        <div class="m"><span class="mono">${(+t.menge||0).toLocaleString('de-AT')} ${esc(t.einheit||'')} × ${eur(t.vk)}</span><span class="mono">EK ${eur(t.ek)}</span>${t.in_pauschale?'<span class="pill">in Pauschale</span>':''}</div></div>
-        <div class="r"><span class="num">${eur((+t.menge||0)*(+t.vk||0))}</span></div></div></div>`;
+        <div class="m">${art==='menge'?`<span class="mono">${numDe(t.menge)} ${esc(t.einheit||'Stk')} × ${eur(t.vk)}</span>`:'<span>Fester Betrag</span>'}${aus?`<span class="mono">EK ${eur(aus)}</span>`:''}${pauschal&&t.in_pauschale?'<span class="pill">in Pauschale</span>':''}${t.quelle==='stueckliste'?'<span class="pill">Stückliste</span>':''}${th?`<span class="mono">${hrs(th)} Aufwand</span>`:''}</div></div>
+        <div class="r"><span class="num" style="${pauschal&&t.in_pauschale?'color:var(--dim);text-decoration:line-through':''}">${eur(erl)}</span>${aus?`<small class="num">Ertrag ${eur(erl-aus)}</small>`:''}</div></div></div>`;
     }
     const zs=(t.zeiteintraege||[]).slice().sort((a,b)=>(pd(b.datum)||0)-(pd(a.datum)||0));
     const th=zs.reduce((s,z)=>s+(+z.stunden||0),0);
@@ -739,24 +770,79 @@ function vProjekt(ki,pi){
       <div class="entries">${zs.map(z=>entryDetail(z,{ki,pi,tid:t.id})).join('')||'<div class="empty" style="padding:6px 0">Keine Einträge.</div>'}</div></div>`;
   }).join('');
   const kal=p.kalkulation&&(p.kalkulation.positionen||[]).length?p.kalkulation:null;
-  const kalSum=kal?kal.positionen.reduce((s,x)=>s+(+x.menge||0)*(+x.preis||0),0):0;
   const zahl=(p.zahlungen||[]).slice().sort((a,b)=>(pd(b.datum)||0)-(pd(a.datum)||0));
   return `${p._m?'<p class="note pend" style="margin:0 2px">Am Handy angelegt oder geändert · noch nicht am PC</p>':''}<div class="card phead">
     <div><div class="nr">${esc(p.nummer||'')}</div><h3>${esc(one(p.name))}</h3>
     <div class="m"><span class="pill ${isActive(p.status)?'aktiv':''}">${esc(p.status||'—')}</span><span>${pauschal?'Pauschal':'Stundensatz '+eur0(satz)+'/h'}</span>${p.rechnung_nr?`<span class="mono">Rg. ${esc(p.rechnung_nr)}${p.rechnung_pos?' / Pos. '+esc(p.rechnung_pos):''}</span>`:''}</div></div>
     <div class="stats"><div><small>Stunden</small><span class="num">${hrs(h)}</span></div><div><small>${pauschal?'Pauschale':'Wert'}</small><span class="num">${eur(v)}</span></div>
     <div><small>Bezahlt</small><span class="num">${eur(paid)}</span></div><div><small>Offen</small><span class="num" style="color:${offen>0.005?'var(--warn)':'var(--muted)'}">${eur(Math.max(0,offen))}</span></div></div>
-    ${pauschal&&h>0?`<p class="note">Effektiver Stundensatz: <span class="mono">${eur(v/h)}/h</span></p>`:''}
+    ${projAuslagen(p)>0.005?`<div class="kv"><span>Auslagen · Ertrag</span><span class="num">${eur(projAuslagen(p))} · ${eur(v-projAuslagen(p))}</span></div>`:''}
+    ${pauschal&&h>0?`<p class="note">Effektiver Stundensatz: <span class="mono">${eur((v-projAuslagen(p))/h)}/h</span></p>`:''}
     ${p.beschreibung?`<div class="desc">${esc(p.beschreibung)}</div>`:''}
     ${pinf?`<div class="path ${pinf.cls}">${ic('ordner','s')}<div><div class="loc">${pinf.loc}</div><div class="p">${esc(pinf.p)}</div></div></div>`:''}
   </div>
   ${zeichnungenSection(k,p)}
   <section class="sec"><h2>Tasks <button data-act="newzeit">+ Zeit erfassen</button></h2><div class="list">${tasks||'<div class="empty">Keine Tasks.</div>'}</div></section>
-  ${kal?`<section class="sec"><h2>Kalkulation <button data-act="editkalk">Bearbeiten</button></h2>${kal._m?'<p class="note pend" style="margin:0 2px">Am Handy geändert · noch nicht am PC</p>':`<p class="note" style="margin:0 2px">Stand ${esc(kal.stand||'')}</p>`}<div class="list kalk">
-    ${kal.positionen.map(x=>`<div class="pos"><span>${esc(x.text)}</span><span class="q">${(+x.menge||0).toLocaleString('de-AT')} ${esc(x.einheit||'')} × ${eur(x.preis)}</span><span class="s">${eur((+x.menge||0)*(+x.preis||0))}</span></div>`).join('')}
-    <div class="sum"><span>Summe netto</span><span class="num">${eur(kalSum)}</span></div></div></section>`:`<section class="sec"><h2>Kalkulation</h2><button class="btn ghost" data-act="editkalk">${ic('plus','s')}Kalkulation anlegen</button></section>`}
+  ${kal?kalkSection(kal,p,k,h):`<section class="sec"><h2>Kalkulation</h2><button class="btn ghost" data-act="editkalk">${ic('plus','s')}Kalkulation anlegen</button></section>`}
   <section class="sec"><h2>Zahlungen <span>${eur(paid)}</span></h2><div class="list">${zahl.map(z=>{const r=pathInfo(z.rechnung);return `<div class="row"><div class="main"><div class="t">${esc(z.kommentar||z.beschreibung||'Zahlung')}</div>
     <div class="m"><span class="mono">${esc(z.datum)}</span>${r?`<span style="color:var(--${r.cls==='drive'?'ok':'warn'})">${r.cls==='drive'?'Rechnung auf Drive':'Rechnung nur am PC'}</span>`:''}</div></div><div class="r"><span class="num">${eur(z.betrag)}</span></div></div>`}).join('')||'<div class="empty">Noch keine Zahlungen.</div>'}</div></section>`;
+}
+
+// ── Kalkulation (wie kalkulation.py) ──
+const KART={arbeit:'Arbeit',material:'Material',fertigung:'Fertigung',sonstiges:'Sonstiges'};
+const STD_EINH=new Set(['std','std.','h','stunde','stunden','std:min']);
+const kArt=x=>{const a=String(x.art||'').toLowerCase();if(KART[a])return a;return STD_EINH.has(String(x.einheit||'').trim().toLowerCase())?'arbeit':'sonstiges'};
+const kBetrag=x=>(+x.menge||0)*(+x.preis||0);
+const numDe=v=>(+v||0).toLocaleString('de-AT',{maximumFractionDigits:3});
+function eur4(v){const n=+v||0,t=n.toFixed(4).split('.');let d=t[1].replace(/0+$/,'');if(d.length<2)d=d.padEnd(2,'0');return (+t[0]).toLocaleString('de-AT')+','+d+' €'}
+function kalkSection(kal,p,k,istH){
+  const pos=kal.positionen,st=Math.max(1,Math.round(+kal.stueckzahl||1)),auf=kal.aufschlag!=null?+kal.aufschlag:null;
+  const sums={};pos.forEach(x=>{const a=kArt(x);sums[a]=(sums[a]||0)+kBetrag(x)});
+  const total=Object.values(sums).reduce((a,b)=>a+b,0);
+  const nGes=pos.filter(x=>x.geschaetzt).length,nFehlt=pos.filter(x=>x.fehlt).length;
+  const info=[kal._m?'<span class="pend">Am Handy geändert · noch nicht am PC</span>':`Stand ${esc(kal.stand||'–')}`];
+  if(st>1)info.push(`für <b>${st} Anlagen</b>`);
+  if(pos.some(x=>kArt(x)==='fertigung')&&auf!=null)info.push(`Aufschlag Fertigung ${numDe(auf)} %`);
+  if(pos.some(x=>+x.ve>1))info.push(kal.packungen?'Packungen ganz verrechnet':'nach Stück verrechnet');
+  const row=x=>{
+    const a=kArt(x),ges=!!x.geschaetzt;
+    const kopf=[x.pos?'Pos. '+esc(x.pos):'',x.zeichnung?esc(x.zeichnung):''].filter(Boolean).join(' · ');
+    return `<div class="pos${x.fehlt?' fehlt':''}">
+      <span>${kopf?`<span class="kz">${kopf}</span>`:''}${esc(x.text)||'<span style="color:var(--dim)">ohne Bezeichnung</span>'}</span>
+      <span class="q">${numDe(x.menge)} ${esc(x.einheit||'')} × ${ges?'≈ ':''}${eur4(x.preis)}${a==='fertigung'&&+x.ek>0?` · EK ${eur4(x.ek)}`:''} <span class="apill">${KART[a]}</span></span>
+      <span class="s">${ges?'≈ ':''}${eur(kBetrag(x))}</span>
+      ${x.fehlt?`<span class="warnline">${esc(x.fehlt)}</span>`:''}
+      ${ges?`<details class="ges"><summary>Wie geschätzt?</summary><pre>${esc(x.geschaetzt)}</pre></details>`:''}
+    </div>`;
+  };
+  return `<section class="sec"><h2>Kalkulation <button data-act="editkalk">Bearbeiten</button></h2>
+    <p class="note" style="margin:0 2px">${info.join(' · ')}</p>
+    ${nGes||nFehlt?`<p class="note" style="margin:0 2px">${nGes?`${nGes} Preis${nGes===1?'':'e'} geschätzt (≈)`:''}${nGes&&nFehlt?' · ':''}${nFehlt?`<span class="pend">${nFehlt} ohne Preis</span>`:''}</p>`:''}
+    <div class="list kalk">${pos.map(row).join('')}
+    ${Object.keys(sums).length>1?Object.keys(KART).filter(a=>sums[a]).map(a=>`<div class="sub"><span>${KART[a]}</span><span class="num">${eur(sums[a])}</span></div>`).join(''):''}
+    <div class="sum"><span>Summe netto</span><span class="num">${eur(total)}</span></div></div></section>
+    ${vergleichSection(kal,p,k,istH)}`;
+}
+function vergleichSection(kal,p,k,istH){
+  const pos=kal.positionen,satz=projSatz(p,k);
+  const sollH=pos.filter(x=>kArt(x)==='arbeit'&&STD_EINH.has(String(x.einheit||'').trim().toLowerCase())).reduce((s,x)=>s+(+x.menge||0),0);
+  const sollA=pos.filter(x=>kArt(x)==='arbeit').reduce((s,x)=>s+kBetrag(x),0);
+  const sollM=pos.filter(x=>['material','fertigung'].includes(kArt(x))).reduce((s,x)=>s+kBetrag(x),0);
+  const sollS=pos.filter(x=>kArt(x)==='sonstiges').reduce((s,x)=>s+kBetrag(x),0);
+  const istA=istH*satz;
+  const istS=(p.tasks||[]).filter(t=>taskArt(t)!=='stunden'&&t.quelle!=='stueckliste').reduce((s,t)=>s+taskErloes(t,0),0);
+  const laeuft=!['abgeschlossen','fertig','beendet','erledigt'].includes(String(p.status||'aktiv').toLowerCase());
+  const diff=(soll,ist)=>{const d=ist-soll;const c=laeuft?'var(--muted)':(d<=0?'var(--ok)':'var(--warn)');return `<span class="num" style="color:${c}">${d>0?'+':''}${eur(d)}</span>`};
+  const pct=sollH>0?Math.round(istH/sollH*100):null;
+  const rows=[];
+  rows.push(`<div class="vg"><b>Arbeit</b><span class="num">${eur(sollA)}</span><span class="num">${eur(istA)}</span>${diff(sollA,istA)}
+    <span class="vgm">${sollH>0?`${hrs(sollH)} kalkuliert · ${hrs(istH)} erfasst`:`${hrs(istH)} erfasst (keine Stunden kalkuliert)`}</span></div>`);
+  if(sollM)rows.push(`<div class="vg"><b>Material${pos.some(x=>kArt(x)==='fertigung')?' + Fertigung':''}</b><span class="num">${eur(sollM)}</span><span class="dimc">nur am PC</span><span></span><span class="vgm">Ist-Wert kommt aus der Stückliste, die liegt nicht in der Projektdatei.</span></div>`);
+  if(sollS||istS)rows.push(`<div class="vg"><b>Sonstiges</b><span class="num">${eur(sollS)}</span>${istS?`<span class="num">${eur(istS)}</span>${diff(sollS,istS)}`:'<span class="dimc">kein Ist-Wert</span><span></span>'}</div>`);
+  return `<section class="sec"><h2>Kalkuliert gegen tatsächlich</h2>
+    ${pct!=null?`<div class="card" style="gap:6px"><div class="kv"><span>Stunden verbraucht</span><span class="num"><b>${pct} %</b></span></div><div class="track big"><div class="fill" style="width:${Math.min(100,pct)}%;${pct>100?'background:var(--warn)':''}"></div></div>${pct>100?`<p class="note pend">${hrs(istH-sollH)} über der Kalkulation</p>`:`<p class="note">${hrs(Math.max(0,sollH-istH))} noch übrig</p>`}</div>`:''}
+    <div class="list vgl"><div class="vg vgh"><span></span><span>kalkuliert</span><span>tatsächlich</span><span>Differenz</span></div>${rows.join('')}</div>
+    ${laeuft?'<p class="note" style="margin:0 2px">Stand heute. Solange das Projekt läuft, ist der Ist-Wert naturgemäß kleiner — die Differenz sagt erst am Ende etwas aus.</p>':''}</section>`;
 }
 function entryDetail(z,c){
   const tag=c?'button':'div',attr=c?` data-ez="${c.ki}|${c.pi}|${esc(c.tid)}|${esc(z.id)}"`:'';
@@ -1017,9 +1103,9 @@ const isoToday=()=>{const d=new Date();return d.getFullYear()+'-'+pad2(d.getMont
 const deToIso=s=>{const m=/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(s||'');return m?`${m[3]}-${pad2(m[2])}-${pad2(m[1])}`:isoToday()};
 const isoToDe=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?`${m[3]}.${m[2]}.${m[1]}`:''};
 const numIn=v=>{let t=String(v??'').trim().replace(/\s|€/g,'');if(!t)return 0;if(t.includes(',')&&t.includes('.'))t=t.replace(/\./g,'');const n=parseFloat(t.replace(',','.'));return isFinite(n)?n:0};
-const numOut=v=>{const n=+v||0;return String(Math.round(n*1000)/1000).replace('.',',')};
+const numOut=v=>{const n=+v||0;return String(Math.round(n*10000)/10000).replace('.',',')};
 const hm=min=>{min=((min%1440)+1440)%1440;return pad2(Math.floor(min/60))+':'+pad2(min%60)};
-const isHourTask=t=>!t.art||t.art==='stunden';
+const isHourTask=t=>taskArt(t)==='stunden';
 function ctxFromStack(){const s=stack[stack.length-1];return s.v==='projekt'?{ki:s.ki,pi:s.pi}:s.v==='kunde'?{ki:s.ki}:{}}
 function projectChoices(){
   const out=[];K().forEach((k,ki)=>(k.projekte||[]).forEach((p,pi)=>out.push({ki,pi,k,p,act:isActive(p.status),l:lastDate(p)})));
@@ -1057,7 +1143,7 @@ function openForm(kind,ctx){
     const p=K()[FM.ctx.ki].projekte[FM.ctx.pi];
     const pos=((p.kalkulation&&p.kalkulation.positionen)||[]);
     FM.alt=JSON.parse(JSON.stringify(pos));
-    FM.rows=pos.map(x=>({orig:x,text:x.text||'',menge:numOut(x.menge),einheit:x.einheit||'Stk',preis:numOut(x.preis),art:x.art||'sonstiges'}));
+    FM.rows=pos.map(x=>({orig:x,text:x.text||'',menge:numOut(x.menge),einheit:x.einheit||'Stk',preis:numOut(x.preis),art:kArt(x)}));
     if(!FM.rows.length)FM.rows.push({orig:{},text:'',menge:'1',einheit:'Std.',preis:numOut(+p.stundensatz||+K()[FM.ctx.ki].stundensatz||0),art:'arbeit'});
   }
   document.getElementById('form').hidden=false;push();drawForm();
@@ -1120,12 +1206,14 @@ function drawForm(){
     const p=K()[FM.ctx.ki].projekte[FM.ctx.pi];
     title='Kalkulation';sub=p.nummer||one(p.name);
     const sum=FM.rows.reduce((a,r)=>a+numIn(r.menge)*numIn(r.preis),0);
-    body=`<div class="fgrid">${FM.rows.map((r,i)=>`<div class="kpos"><div class="kh"><span>Position ${i+1}${r.orig.zeichnung?' · '+esc(r.orig.zeichnung):''}</span><button class="linkbtn" data-kdel="${i}" style="color:var(--err)">Entfernen</button></div>
+    const kk=p.kalkulation||{};
+    body=`<div class="fgrid">${(+kk.stueckzahl||1)>1||kk.aufschlag!=null?`<p class="fhint">${(+kk.stueckzahl||1)>1?`Für ${Math.round(+kk.stueckzahl)} Anlagen. `:''}Stückzahl, Aufschlag und Stück/Packung stellst du am PC ein.</p>`:''}${FM.rows.map((r,i)=>`<div class="kpos"><div class="kh"><span>Position ${i+1}${r.orig.zeichnung?' · '+esc(r.orig.zeichnung):''}</span><button class="linkbtn" data-kdel="${i}" style="color:var(--err)">Entfernen</button></div>
         <label class="fld"><span>Bezeichnung</span><input data-ki="${i}" data-kf="text" value="${esc(r.text)}"></label>
         <div class="frow"><label class="fld"><span>Menge</span><input data-ki="${i}" data-kf="menge" value="${esc(r.menge)}" inputmode="decimal"></label>
         <label class="fld"><span>Einheit</span><input data-ki="${i}" data-kf="einheit" value="${esc(r.einheit)}"></label>
         <label class="fld"><span>Preis €</span><input data-ki="${i}" data-kf="preis" value="${esc(r.preis)}" inputmode="decimal"></label></div>
-        <label class="fld"><span>Art</span><select data-ki="${i}" data-kf="art">${[['arbeit','Arbeit'],['material','Material'],['sonstiges','Sonstiges']].map(([a,l])=>`<option value="${a}" ${r.art===a?'selected':''}>${l}</option>`).join('')}</select></label>
+        <label class="fld"><span>Art</span><select data-ki="${i}" data-kf="art">${Object.entries(KART).map(([a,l])=>`<option value="${a}" ${r.art===a?'selected':''}>${l}</option>`).join('')}</select></label>
+        ${r.orig.geschaetzt?`<p class="fhint">≈ Geschätzter Preis${+r.orig.ek>0?` (EK ${eur4(r.orig.ek)})`:''}. Änderst du ihn, gilt dein Preis.</p>`:''}${r.orig.fehlt?`<p class="fhint pend">${esc(r.orig.fehlt)}</p>`:''}
         <div class="kv"><span>Betrag</span><span class="num" data-kb="${i}">${eur(numIn(r.menge)*numIn(r.preis))}</span></div></div>`).join('')}
       <button class="btn ghost" data-act="kadd">${ic('plus','s')}Position hinzufügen</button>
       <div class="fcalc"><span>Summe netto</span><b id="fsum">${eur(sum)}</b></div></div>`;
@@ -1181,7 +1269,12 @@ function formSave(){
   }
   if(FM.kind==='kalk'){
     const k=K()[FM.ctx.ki],p=k.projekte[FM.ctx.pi];
-    const pos=FM.rows.filter(r=>String(r.text).trim()||numIn(r.preis)).map(r=>Object.assign({},r.orig,{text:String(r.text).trim(),menge:numIn(r.menge),einheit:String(r.einheit).trim()||'Stk',preis:numIn(r.preis),art:r.art}));
+    const pos=FM.rows.filter(r=>String(r.text).trim()||numIn(r.preis)).map(r=>{
+      const x=Object.assign({},r.orig,{text:String(r.text).trim(),menge:numIn(r.menge),einheit:String(r.einheit).trim()||'Stk',preis:numIn(r.preis),art:r.art});
+      if(x.preis>0)delete x.fehlt;                                     // Preis ist jetzt da
+      if(r.orig.geschaetzt&&Math.abs(x.preis-(+r.orig.preis||0))>0.00005)delete x.geschaetzt;  // von Hand statt geschätzt
+      return x;
+    });
     if(JSON.stringify(pos)===JSON.stringify(FM.alt)){formClose();return}
     addOps([{typ:'kalkulation_setzen',kunde_id:k.id,projekt_id:p.id,positionen:pos,alt:FM.alt}]);
     formClose();toast('Kalkulation gespeichert.');return;
