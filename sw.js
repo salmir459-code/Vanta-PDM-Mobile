@@ -1,6 +1,6 @@
 // Vanta PDM Mobil – Service Worker
 // Speichert nur die App selbst (keine Kundendaten, keine Zeichnungen).
-const CACHE = 'vanta-app-v3';
+const CACHE = 'vanta-app-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

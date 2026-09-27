@@ -257,6 +257,31 @@ nav.tabs button.on{color:var(--accent-t)}
 button.entry{width:100%;text-align:left}
 button.entry:active{background:var(--s2)}
 .hbtn.acc{color:var(--accent-t)}
+/* Stückliste */
+.pill.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.pill.k-zukauf{background:color-mix(in srgb,#1560BD 14%,transparent);color:color-mix(in srgb,#1560BD 70%,var(--text))}
+.pill.k-norm{background:color-mix(in srgb,#5A4FCF 14%,transparent);color:color-mix(in srgb,#5A4FCF 70%,var(--text))}
+.pill.k-eigen{background:color-mix(in srgb,#1A6B3C 14%,transparent);color:color-mix(in srgb,#1A6B3C 70%,var(--text))}
+.btree .brow{display:flex;align-items:stretch;border-top:1px solid var(--border);padding-left:calc(var(--d,0) * 14px)}
+.btree .brow:first-child{border-top:0}
+.btree .brow.asm{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.btree .brow.asm .t{font-weight:700}
+.btree .brow.nop{background:color-mix(in srgb,var(--warn) 7%,transparent)}
+.btog{flex:none;width:34px;display:flex;align-items:center;justify-content:center;color:var(--dim)}
+.btog svg{transition:transform .15s}
+.btog.open svg{transform:rotate(90deg)}
+.bmain{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:10px 14px 10px 2px;text-align:left}
+.bmain:active{background:var(--s2)}
+.bmain .main{flex:1;min-width:0}
+.bmain .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bmain .m{font-size:13px;color:var(--muted);display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center}
+.bmain .r{text-align:right;flex:none}
+.bmain .r .num{display:block;font-size:14px}
+.bmain .r small{display:block;font-size:12px;color:var(--muted)}
+.bpos{font-family:var(--mono);font-size:12px;color:var(--accent-t);margin-right:6px;font-weight:500}
+.row.nop{background:color-mix(in srgb,var(--warn) 7%,transparent)}
+.row .m small{font-size:12px}
+.list .kalk .sum{border-top:1px solid var(--borderb)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -268,6 +293,7 @@ button.entry:active{background:var(--s2)}
 <nav class="tabs"><div class="in" id="tabs"></div></nav>
 <div id="sheet" class="overlay" hidden></div>
 <div id="form" class="overlay" hidden></div>
+<div id="teil" class="overlay" hidden></div>
 <div id="pv" class="pv" hidden></div>
 <div id="toast" class="toast" hidden role="status"></div>
 
@@ -283,7 +309,7 @@ const CFG={
   changesName:'mobile_changes.json',
   settingsName:'vanta_mobile.json'
 };
-const VERSION='Mobil 2.1';
+const VERSION='Mobil 2.2';
 const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 const PDFJS_W='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const FOLDER='application/vnd.google-apps.folder';
@@ -305,6 +331,7 @@ const ICON={
   dokument:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>',
   link:'<path d="M9 15l6-6"/><path d="M11 6l.46-.54a5 5 0 0 1 7.07 7.08L18 13"/><path d="M13 18l-.4.53a5.07 5.07 0 0 1-7.12 0 4.97 4.97 0 0 1 0-7.07L6 11"/>',
   plus:'<path d="M12 5v14"/><path d="M5 12h14"/>',
+  liste:'<path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/><path d="M5 6v.01"/><path d="M5 12v.01"/><path d="M5 18v.01"/>',
   stift:'<path d="M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/>',
   papierkorb:'<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',
   minus:'<path d="M5 12h14"/>',
@@ -631,6 +658,7 @@ function uiBack(){history.back()}
 window.addEventListener('popstate',()=>{
   if(ignorePops>0){ignorePops--;return}
   if(!document.getElementById('pv').hidden){closePdf();return}
+  if(!document.getElementById('teil').hidden){closeTeilEl();return}
   if(!document.getElementById('sheet').hidden){sheetBack();return}
   if(!document.getElementById('form').hidden){formHide();return}
   if(stack.length>1){stack.pop();render(true)}
@@ -782,6 +810,7 @@ function vProjekt(ki,pi){
     ${pinf?`<div class="path ${pinf.cls}">${ic('ordner','s')}<div><div class="loc">${pinf.loc}</div><div class="p">${esc(pinf.p)}</div></div></div>`:''}
   </div>
   ${zeichnungenSection(k,p)}
+  ${bomSection(k,p)}
   <section class="sec"><h2>Tasks <button data-act="newzeit">+ Zeit erfassen</button></h2><div class="list">${tasks||'<div class="empty">Keine Tasks.</div>'}</div></section>
   ${kal?kalkSection(kal,p,k,h):`<section class="sec"><h2>Kalkulation</h2><button class="btn ghost" data-act="editkalk">${ic('plus','s')}Kalkulation anlegen</button></section>`}
   <section class="sec"><h2>Zahlungen <span>${eur(paid)}</span></h2><div class="list">${zahl.map(z=>{const r=pathInfo(z.rechnung);return `<div class="row"><div class="main"><div class="t">${esc(z.kommentar||z.beschreibung||'Zahlung')}</div>
@@ -847,6 +876,368 @@ function vergleichSection(kal,p,k,istH){
 function entryDetail(z,c){
   const tag=c?'button':'div',attr=c?` data-ez="${c.ki}|${c.pi}|${esc(c.tid)}|${esc(z.id)}"`:'';
   return `<${tag} class="entry"${attr}><span class="d">${esc(String(z.datum||'').slice(0,6))}</span><span class="c">${esc(z.kommentar)||'<span style="color:var(--dim)">ohne Kommentar</span>'}</span><span class="h">${(+z.stunden||0).toFixed(2).replace('.',',')}</span>${z.von&&z.bis&&z.von!==z.bis?`<span class="vb">${esc(z.von)}–${esc(z.bis)}${z.pause_min?` · ${z.pause_min} min Pause`:''}</span>`:''}${z._m?'<span class="vb pend">am Handy erfasst · noch nicht am PC</span>':''}</${tag}>`;
+}
+
+// ════════════ Stückliste (pdm_bom/<Projekt-ID>.json, wie project_cad.py) ════════════
+// Nur lesen. Die Datei schreibt allein der PC („Aus Inventor einlesen“).
+let BOMC=LS.get('vanta_bom')||{};         // Zwischenspeicher: {pid:{mt,data,t}}
+const BOMMEM={};                          // {pid:{data,from,t,err}}
+const bomBusy={};
+let bomDir=null;                          // {t,files:{name:{id,mt}}}
+const bomName=pid=>(String(pid||'unbekannt').replace(/[^A-Za-z0-9_.-]/g,'_').slice(0,64)||'unbekannt')+'.json';
+function bomNorm(d,pid){
+  if(!d||typeof d!=='object')return null;
+  const out={projekt_id:d.projekt_id||pid,baugruppe:String(d.baugruppe||''),gelesen_am:String(d.gelesen_am||''),
+    beschaffung:d.beschaffung==='selbst'?'selbst':'kunde',positionen:[]};
+  (Array.isArray(d.positionen)?d.positionen:[]).forEach(p=>{
+    if(!p||typeof p!=='object')return;
+    const props={};Object.entries(p.props&&typeof p.props==='object'?p.props:{}).forEach(([k,v])=>props[k]=v==null?'':String(v));
+    const fn=String(p.filename||''),num=v=>{const n=parseFloat(v);return isFinite(n)&&n>0?n:null};
+    out.positionen.push({pos:String(p.pos??''),filename:fn,pfad:String(p.pfad||''),stem:String(p.stem||fn.replace(/\.[^.]*$/,'')),
+      is_asm:!!p.is_asm,qty:parseInt(p.qty)||1,qty_total:parseInt(p.qty_total??p.qty)||1,props,
+      auto_cm:num(p.auto_cm),auto_kg:num(p.auto_kg),auto_quelle:String(p.auto_quelle||''),
+      selbst:p.selbst===true||p.selbst===false?p.selbst:null});
+  });
+  return out;
+}
+async function bomParent(){
+  if(SET.dataParentId)return SET.dataParentId;
+  const m=await api('files/'+SET.dataFileId,{fields:'parents',supportsAllDrives:'true'});
+  SET.dataParentId=(m.parents||[])[0]||'';saveSettings();return SET.dataParentId;
+}
+async function bomListe(force){
+  if(bomDir&&!force&&Date.now()-bomDir.t<120000)return bomDir;
+  const parent=await bomParent();
+  const f=parent?await findChild(parent,'pdm_bom',true):null;
+  const files={};
+  if(f)(await listChildren(f.id)).forEach(x=>{if(/\.json$/i.test(x.name))files[x.name]={id:x.id,mt:x.modifiedTime||''}});
+  bomDir={t:Date.now(),files};return bomDir;
+}
+function bomCacheSave(){
+  const ks=Object.keys(BOMC).sort((a,b)=>(BOMC[b].t||0)-(BOMC[a].t||0));
+  ks.slice(15).forEach(k=>delete BOMC[k]);        // höchstens 15 Projekte merken
+  LS.set('vanta_bom',BOMC);
+}
+function bomHolen(pid,force){
+  const m=BOMMEM[pid];
+  if(m&&!force&&!(m.from==='cache'&&tokenValid())&&Date.now()-m.t<120000)return Promise.resolve(m);
+  if(bomBusy[pid])return bomBusy[pid];
+  const c=BOMC[pid];
+  const pr=(async()=>{
+    if(!tokenValid()){
+      if(c)return BOMMEM[pid]={data:c.data,from:'cache',t:Date.now()};
+      throw new AuthErr('auth');
+    }
+    try{
+      const dir=await bomListe(force);
+      const e=dir.files[bomName(pid)];
+      if(!e){if(c){delete BOMC[pid];bomCacheSave()}return BOMMEM[pid]={data:null,from:'drive',t:Date.now()}}
+      let data;
+      if(c&&c.mt===e.mt&&!force)data=c.data;
+      else{
+        data=bomNorm(JSON.parse(new TextDecoder().decode(await download(e.id))),pid);
+        BOMC[pid]={mt:e.mt,data,t:Date.now()};bomCacheSave();
+      }
+      if(c)c.t=Date.now();
+      return BOMMEM[pid]={data,from:'drive',t:Date.now()};
+    }catch(err){
+      if(c&&!(err instanceof AuthErr))return BOMMEM[pid]={data:c.data,from:'cache',t:Date.now(),err:err.message};
+      throw err;
+    }
+  })();
+  bomBusy[pid]=pr;const fertig=()=>{delete bomBusy[pid]};pr.then(fertig,fertig);
+  return pr;
+}
+
+// ── Rechnen (bom_builder / project_cad / bestellliste / packung) ──
+function zahlWert(t,v=0){let s=String(t??'').trim();if(!s)return v;s=s.replace(/[^0-9,.\-]/g,'');if(!s)return v;
+  if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(','))s=s.replace(',','.');
+  const n=Number(s);return isFinite(n)?n:v}
+function preisWert(t){let s=String(t??'').trim();if(!s)return 0;s=s.replace(/€|EUR|eur|\s/g,'');
+  if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(','))s=s.replace(',','.');
+  const n=Number(s);return isFinite(n)?n:0}
+const bProp=(p,k)=>String((p.props||{})[k]??'').trim();
+const bEinheit=p=>bProp(p,'Einheit')||'Stk';
+const bMeter=p=>!['','stk','stück','stueck','stk.','st'].includes(bEinheit(p).toLowerCase());
+function bMassEigen(p){const w=zahlWert(bProp(p,'Länge'),0);return w>0?w:zahlWert(bProp(p,'Maß'),0)}
+function bMassAuto(p){
+  if(!bMeter(p))return 0;const e=bEinheit(p).toLowerCase();
+  if(e==='kg')return +p.auto_kg||0;
+  const f={m:100,cm:1,mm:0.1}[e];if(!f)return 0;
+  const cm=+p.auto_cm||0;return cm>0?Math.round(cm/f*1e4)/1e4:0;
+}
+function bMassJe(p){if(!bMeter(p))return 1;const w=bMassEigen(p);if(w>0)return w;const a=bMassAuto(p);return a>0?a:1}
+const bMassFehlt=p=>bMeter(p)&&bMassEigen(p)<=0&&bMassAuto(p)<=0;
+function bMassQuelle(p){if(bMassEigen(p)>0||bMassAuto(p)<=0)return '';return bEinheit(p).toLowerCase()==='kg'?'Masse':(p.auto_quelle||'Parameter')}
+const bMenge=p=>(p.qty_total||1)*bMassJe(p);
+function fmtMenge(v){const f=+v||0;if(Math.abs(f-Math.round(f))<0.0005)return String(Math.round(f));return f.toFixed(3).replace(/0+$/,'').replace(/\.$/,'').replace('.',',')}
+const bMengeText=p=>fmtMenge(bMenge(p))+(bMeter(p)?' '+bEinheit(p):' Stk');
+const bPreis=p=>preisWert(bProp(p,'Preis'));
+function bKat(p){
+  if(p.is_asm)return 'bg';
+  const a=bProp(p,'Art').toLowerCase();
+  if(/^(zukauf|kaufteil|zt)/.test(a))return 'zukauf';
+  if(/^(norm|nt)/.test(a))return 'norm';
+  return a?'eigen':'';
+}
+const bSelbst=(p,besch)=>p.is_asm?false:(p.selbst!=null?!!p.selbst:besch==='selbst');
+function lzTage(text){ // project_cad: Zahl ohne Einheit = Tage
+  const s=String(text||'').trim().toLowerCase();if(!s)return null;
+  const z=s.match(/\d+(?:[.,]\d+)?/g);if(!z)return null;
+  const w=Math.max(...z.map(x=>parseFloat(x.replace(',','.'))));
+  for(const [ws,f] of [[['woche','wochen','wo','wk'],7],[['monat','monate','mon'],30],[['tag','tage','td','at','werktage','werktag'],1]])
+    for(const x of ws)if(new RegExp('\\b'+x).test(s))return w*f;
+  return w;
+}
+function lzTageBL(text){ // bestellliste: Zahl ohne Einheit = Wochen
+  const s=String(text||'').trim().toLowerCase();if(!s)return 0;
+  const z=s.match(/\d+(?:[.,]\d+)?/g);if(!z)return 0;
+  const w=Math.max(...z.map(x=>parseFloat(x.replace(',','.'))));
+  for(const [ws,f] of [[['woche','wochen','w','wo','kw'],7],[['tag','tage','t','d','werktage','arbeitstage'],1],[['monat','monate','m','mon'],30]])
+    for(const x of ws)if(new RegExp('\\b'+x+'\\b').test(s))return Math.round(w*f);
+  return Math.round(w*7);
+}
+function lzText(t){if(t<=0)return 'unbekannt';if(t%7===0&&t>=7){const w=t/7;return w+' Woche'+(w!==1?'n':'')}return t+' Tag'+(t!==1?'e':'')}
+function bomKennzahlen(d){
+  const o={positionen:0,teile:0,baugruppen:0,zukauf:0,norm:0,eigen:0,materialwert:0,auslagen:0,ohne_preis:0,selbst_positionen:0,lz:null,lzText:''};
+  if(!d)return o;
+  d.positionen.forEach(p=>{
+    o.positionen++;
+    if(p.is_asm){o.baugruppen++;o.materialwert+=preisWert(bProp(p,'Fertigungskosten'))*bMenge(p);return}
+    o.teile++;
+    const k=bKat(p);if(k)o[k]++;
+    const pr=bPreis(p),m=bMenge(p);
+    if(pr<=0)o.ohne_preis++;
+    o.materialwert+=pr*m;
+    if(bSelbst(p,d.beschaffung)){o.selbst_positionen++;o.auslagen+=pr*m}
+    const t=lzTage(bProp(p,'Lieferzeit'));
+    if(t!=null&&(o.lz==null||t>o.lz)){o.lz=t;o.lzText=bProp(p,'Lieferzeit')}
+  });
+  o.materialwert=Math.round(o.materialwert*100)/100;o.auslagen=Math.round(o.auslagen*100)/100;
+  return o;
+}
+const bEltern=pos=>pos.includes('.')?pos.slice(0,pos.lastIndexOf('.')):'';
+function bZwischen(d){ // Preis je Baugruppe (1 Stück) = eigene Kosten + Teile × Menge
+  const kinder={};d.positionen.forEach(p=>(kinder[bEltern(p.pos)]=kinder[bEltern(p.pos)]||[]).push(p));
+  const out={};
+  const sum=(p,t)=>{if(!p.is_asm)return bPreis(p)*bMassJe(p);if(t>12)return 0;
+    let s=preisWert(bProp(p,'Fertigungskosten'));(kinder[p.pos]||[]).forEach(k=>s+=sum(k,t+1)*k.qty);out[p.pos]=s;return s};
+  d.positionen.forEach(p=>{if(p.is_asm)sum(p,0)});
+  return out;
+}
+const EIGEN_W=['eigen','dreh','fräs','fraes','blech','schweiß','schweiss','laser','kant','3d','druckteil'];
+function bIstEigen(p){const a=bProp(p,'Art').toLowerCase();return EIGEN_W.some(w=>a.includes(w))}
+function bomGruppen(d){ // wie bestellliste.gruppieren (Baumenge 1)
+  const nach={},gleich={};
+  d.positionen.forEach((p,i)=>{
+    if(p.is_asm)return;
+    if(!bProp(p,'Lieferant')&&bIstEigen(p))return;
+    const lf=bProp(p,'Lieferant')||'Ohne Lieferant';
+    const key=lf+'|'+(p.pfad||p.filename).toLowerCase();
+    const menge=bMenge(p);
+    if(gleich[key]){gleich[key].menge+=menge;if(p.pos)gleich[key].pos+=', '+p.pos;return}
+    const ve=zahlWert(bProp(p,'VE'),0);
+    const e={i,datei:p.filename,stem:p.stem,beschreibung:bProp(p,'Beschreibung'),bestellnummer:bProp(p,'Bestellnummer'),menge,
+      einheit:bMeter(p)?bEinheit(p):'Stk',preis:bPreis(p),ve:ve>0?ve:0,tage:lzTageBL(bProp(p,'Lieferzeit')),lieferzeit:bProp(p,'Lieferzeit'),pos:p.pos};
+    gleich[key]=e;
+    const g=nach[lf]=nach[lf]||{lieferant:lf,positionen:[],summe:0,reste:0,tage:0,unvollstaendig:0};
+    g.positionen.push(e);g.tage=Math.max(g.tage,e.tage);
+  });
+  const gs=Object.values(nach);
+  gs.forEach(g=>{
+    g.positionen.forEach(e=>{
+      if(e.ve>1&&e.menge>0){e.packungen=Math.ceil(e.menge/e.ve-1e-9);e.rest=Math.round((e.packungen*e.ve-e.menge)*1000)/1000;e.packpreis=e.preis*e.ve;e.kosten=e.packungen*e.packpreis}
+      else{e.packungen=0;e.rest=0;e.packpreis=0;e.kosten=e.preis*e.menge}
+      g.summe+=e.kosten;g.reste+=e.kosten-e.preis*e.menge;
+      if(e.preis<=0||e.menge<=0||!e.bestellnummer)g.unvollstaendig++;
+    });
+    g.positionen.sort((a,b)=>(a.bestellnummer.toLowerCase()+'\u0000'+a.datei.toLowerCase()).localeCompare(b.bestellnummer.toLowerCase()+'\u0000'+b.datei.toLowerCase()));
+  });
+  gs.sort((a,b)=>((a.lieferant==='Ohne Lieferant')-(b.lieferant==='Ohne Lieferant'))||(b.tage-a.tage)||a.lieferant.toLowerCase().localeCompare(b.lieferant.toLowerCase()));
+  return gs;
+}
+const baseName=s=>String(s||'').split(/[\\/]/).pop();
+const KATTXT={zukauf:'Zukauf',norm:'Norm',eigen:'Eigen',bg:'Baugruppe'};
+
+// ── Abschnitt im Projekt ──
+function bomSection(k,p){
+  if(!p.id)return '';
+  return `<section class="sec"><h2>Stückliste</h2><div data-bom="${esc(p.id)}"><div class="list"><div class="loading"><span class="spin"></span>Lade Stückliste …</div></div></div></section>`;
+}
+function bomStandNote(m){
+  if(m.from==='cache')return `<p class="note pend" style="margin:0">Stand aus dem Zwischenspeicher${m.err?' ('+esc(m.err)+')':tokenValid()?'':' – zum Aktualisieren anmelden'}.</p>`;
+  return '';
+}
+async function fillBom(el){
+  const pid=el.dataset.bom,st=stack[stack.length-1];
+  const draw=m=>{
+    if(!el.isConnected)return;
+    const d=m.data;
+    if(!d){el.innerHTML=`<div class="card"><p class="note">Für dieses Projekt ist noch keine Stückliste eingelesen. Am PC: Projekt → Reiter „Konstruktion“ → „Aus Inventor einlesen“.</p></div>`;return}
+    const kz=bomKennzahlen(d);
+    const arten=[kz.zukauf?kz.zukauf+' Zukauf':'',kz.norm?kz.norm+' Norm':'',kz.eigen?kz.eigen+' Eigen':''].filter(Boolean).join(' · ')||'keine Art gepflegt';
+    el.innerHTML=`<div class="card">
+      <div><div class="t" style="font-weight:600;overflow-wrap:anywhere">${esc(baseName(d.baugruppe)||'Hauptbaugruppe')}</div>
+      <p class="note" style="margin:2px 0 0">gelesen am ${esc(d.gelesen_am||'?')} · ob die Baugruppe seitdem geändert wurde, sieht nur der PC</p></div>
+      ${bomStandNote(m)}
+      <div class="stats"><div><small>Positionen</small><span class="num">${kz.positionen}</span></div><div><small>Teile · BG</small><span class="num">${kz.teile} · ${kz.baugruppen}</span></div>
+      <div><small>Materialwert</small><span class="num">${eur(kz.materialwert)}</span></div><div><small>${d.beschaffung==='selbst'?'Auslagen (ich zahle)':'Auslagen'}</small><span class="num">${eur(kz.auslagen)}</span></div>
+      <div><small>Ohne Preis</small><span class="num" style="${kz.ohne_preis?'color:var(--warn)':''}">${kz.ohne_preis} von ${kz.teile}</span></div><div><small>Längste Lieferzeit</small><span class="num">${kz.lz!=null?esc(kz.lzText||Math.round(kz.lz)+' Tage'):'—'}</span></div></div>
+      <p class="note" style="margin:0">${esc(arten)} · Material: ${d.beschaffung==='selbst'?'ich beschaffe und bezahle':'der Kunde beschafft'}${kz.selbst_positionen&&d.beschaffung!=='selbst'?` (${kz.selbst_positionen} Position${kz.selbst_positionen===1?'':'en'} zahle ich selbst)`:''}</p>
+      <button class="btn ghost" data-go="bom" data-ki="${st.ki}" data-pi="${st.pi}">${ic('liste','s')}Stückliste öffnen</button></div>`;
+  };
+  const m=BOMMEM[pid];if(m)draw(m);
+  try{draw(await bomHolen(pid))}
+  catch(e){
+    if(!el.isConnected||BOMMEM[pid])return;
+    el.innerHTML=e instanceof AuthErr?`<div class="list"><div class="row"><div class="main"><div class="t">Anmeldung nötig</div><div class="m">Zum Laden der Stückliste bei Google anmelden.</div></div><button class="btn small" data-act="login">Anmelden</button></div></div>`
+      :`<div class="list"><div class="empty">Stückliste konnte nicht geladen werden: ${esc(e.message)}</div></div>`;
+  }
+}
+
+// ── Seite „Stückliste“ ──
+function bomUi(pid){if(!ui.bom||ui.bom.pid!==pid)ui.bom={pid,mode:'baum',filter:'alle',q:'',zu:new Set()};return ui.bom}
+function bomRow(p,i,d,zw,depth,hasKids,closed){
+  const kat=bKat(p),pr=bPreis(p),besch=bProp(p,'Beschreibung');
+  const meta=[besch&&besch!==p.stem?`<span>${esc(besch)}</span>`:'',kat&&kat!=='bg'?`<span class="pill k-${kat}">${esc(bProp(p,'Art')||KATTXT[kat])}</span>`:'',
+    bProp(p,'Material')?`<span>${esc(bProp(p,'Material'))}</span>`:'',bProp(p,'Lieferant')?`<span>${esc(bProp(p,'Lieferant'))}</span>`:''].filter(Boolean).join('');
+  let r;
+  if(p.is_asm){const z=zw[p.pos]||0;r=`<span class="num">${p.qty}×</span>${z>0?`<small class="num">Σ ${eur(z)}</small>`:''}`}
+  else if(pr>0)r=`<span class="num">${eur(pr*bMenge(p))}</span><small class="num">${esc(bMengeText(p))} × ${eur4(pr)}</small>`;
+  else r=`<span class="pill warn">kein Preis</span><small class="num">${esc(bMengeText(p))}</small>`;
+  const tog=hasKids?`<button class="btog${closed?'':' open'}" data-btog="${esc(p.pos)}" aria-label="${closed?'Aufklappen':'Zuklappen'}" aria-expanded="${!closed}">${ic('chev','s')}</button>`:'<span class="btog"></span>';
+  return `<div class="brow${p.is_asm?' asm':''}${!p.is_asm&&pr<=0?' nop':''}" style="--d:${Math.max(0,Math.min(depth,6))}">${depth>=0?tog:''}<button class="bmain" data-bteil="${i}">
+    <div class="main"><div class="t"><span class="bpos">${esc(p.pos)}</span>${esc(p.stem||p.filename)}</div>${meta?`<div class="m">${meta}</div>`:''}${bMassFehlt(p)?`<div class="m pend">Länge fehlt – gerechnet mit 1 ${esc(bEinheit(p))} je Stück</div>`:''}</div>
+    <div class="r">${r}</div></button></div>`;
+}
+function vBom(ki,pi){
+  const k=K()[ki],p=k.projekte[pi],pid=p.id;
+  header('Stückliste',(p.nummer||one(p.name)),hBtn('bomreload','neu','Stückliste neu laden'));
+  const m=BOMMEM[pid];
+  if(!m)return `<div class="list" data-bomload="${esc(pid)}"><div class="loading"><span class="spin"></span>Lade Stückliste …</div></div>`;
+  const d=m.data;
+  if(!d)return `<div class="card"><p class="note">Für dieses Projekt ist keine Stückliste eingelesen.</p></div>`;
+  const u=bomUi(pid),kz=bomKennzahlen(d),zw=bZwischen(d),pos=d.positionen;
+  const cnt={alle:pos.length,ohne:pos.filter(x=>!x.is_asm&&bPreis(x)<=0).length,kauf:pos.filter(x=>['zukauf','norm'].includes(bKat(x))).length,eigen:pos.filter(x=>bKat(x)==='eigen').length};
+  const top=`${bomStandNote(m)}<div class="card" style="gap:6px"><div style="font-weight:600;overflow-wrap:anywhere">${esc(baseName(d.baugruppe))}</div>
+    <p class="note" style="margin:0">gelesen am ${esc(d.gelesen_am||'?')} · ${kz.positionen} Positionen · Materialwert <span class="mono">${eur(kz.materialwert)}</span>${kz.ohne_preis?` · <span class="pend">${kz.ohne_preis} ohne Preis</span>`:''}</p></div>
+    <div class="seg"><button class="${u.mode==='baum'?'on':''}" data-bmode="baum">Stückliste</button><button class="${u.mode==='lief'?'on':''}" data-bmode="lief">Nach Lieferant</button></div>`;
+  if(u.mode==='lief'){
+    const gs=bomGruppen(d),ges=gs.reduce((a,g)=>a+g.summe,0),reste=gs.reduce((a,g)=>a+g.reste,0),vor=Math.max(0,...gs.map(g=>g.tage));
+    if(!gs.length)return top+`<div class="list"><div class="empty">Keine zu bestellenden Positionen.</div></div>`;
+    return top+(vor>0?`<p class="note" style="margin:0 2px">Längste Lieferzeit <b>${esc(lzText(vor))}</b> – so früh muss die erste Bestellung raus.</p>`:'')
+      +gs.map(g=>`<section class="sec"><h2>${esc(g.lieferant)} <span>${eur(g.summe)}</span></h2>
+        <p class="note" style="margin:-4px 2px 0">${g.positionen.length} Position${g.positionen.length===1?'':'en'} · Lieferzeit ${esc(lzText(g.tage))}${g.unvollstaendig?` · <span class="pend">${g.unvollstaendig} unvollständig</span>`:''}</p>
+        <div class="list">${g.positionen.map(e=>{
+          const nr=e.bestellnummer||'';
+          const menge=e.packungen?`<b>${e.packungen} Pkg</b> à ${esc(fmtMenge(e.ve))} ${esc(e.einheit)}<br><small>Bedarf ${esc(fmtMenge(e.menge))}${e.rest>0?' · übrig '+esc(fmtMenge(e.rest)):''}</small>`:`${esc(fmtMenge(e.menge))} ${esc(e.einheit)}`;
+          const preis=e.preis>0?(e.packungen?`${eur4(e.packpreis)}/Pkg`:`${eur4(e.preis)}/${esc(e.einheit)}`):'<span class="pend">kein Preis</span>';
+          return `<button class="row${e.preis<=0||!nr?' nop':''}" data-bteil="${e.i}"><div class="main"><div class="t">${nr?esc(nr):'<span class="pend">ohne Bestellnummer</span>'}</div>
+            <div class="m"><span>${esc(e.beschreibung&&e.beschreibung!==nr?e.beschreibung:e.stem)}</span><span class="mono">Pos. ${esc(e.pos)}</span></div>
+            <div class="m mono">${menge} · ${preis}</div></div><div class="r"><span class="num">${e.preis>0?eur(e.kosten):'—'}</span></div></button>`}).join('')}
+        <div class="kalk"><div class="sum"><span>Summe ${esc(g.lieferant)}</span><span class="num">${eur(g.summe)}</span></div></div></div></section>`).join('')
+      +`<div class="list kalk"><div class="sum"><span>Gesamt</span><span class="num">${eur(ges)}</span></div></div>`
+      +(reste>0.005?`<p class="note" style="margin:0 2px">Davon ${eur(reste)} für Reste in angebrochenen Packungen.</p>`:'');
+  }
+  const chips=[['alle','Alle'],['ohne','Ohne Preis'],['kauf','Zukauf + Norm'],['eigen','Eigenfertigung']]
+    .map(([f,l])=>`<button class="chip${u.filter===f?' on':''}" data-bfilter="${f}">${l} <span class="mono">${cnt[f]}</span></button>`).join('');
+  const q=u.q.trim().toLowerCase();
+  const flat=u.filter!=='alle'||q;
+  let rows='';
+  if(flat){
+    const ok=x=>u.filter==='ohne'?!x.is_asm&&bPreis(x)<=0:u.filter==='kauf'?['zukauf','norm'].includes(bKat(x)):u.filter==='eigen'?bKat(x)==='eigen':true;
+    const hit=x=>!q||[x.pos,x.stem,x.filename,...['Beschreibung','Bestellnummer','Lieferant','Material','Hersteller','Herstellernummer','Art'].map(f=>bProp(x,f))].join(' ').toLowerCase().includes(q);
+    rows=pos.map((x,i)=>ok(x)&&hit(x)?bomRow(x,i,d,zw,-1,false,false):'').join('');
+  }else{
+    const kids=new Set(pos.map(x=>bEltern(x.pos)));
+    const hidden=x=>{let e=bEltern(x.pos);while(e){if(u.zu.has(e))return true;e=bEltern(e)}return false};
+    rows=pos.map((x,i)=>hidden(x)?'':bomRow(x,i,d,zw,x.pos.split('.').length-1,x.is_asm&&kids.has(x.pos),u.zu.has(x.pos))).join('');
+  }
+  const asms=pos.filter(x=>x.is_asm).length;
+  return top+`<label class="search">${ic('suchen','s')}<input id="bq" type="search" placeholder="Nummer, Beschreibung, Lieferant …" value="${esc(u.q)}" autocomplete="off"></label>
+    <div class="chips">${chips}</div>
+    ${!flat&&asms?`<div class="btnrow" style="justify-content:flex-end;margin:-6px 2px -8px"><button class="linkbtn" data-act="bomauf">Alle auf</button><button class="linkbtn" data-act="bomzu">Alle zu</button></div>`:''}
+    <div class="list btree">${rows||'<div class="empty">Keine Positionen.</div>'}</div>
+    <div class="list kalk"><div class="sum"><span>Materialwert</span><span class="num">${eur(kz.materialwert)}</span></div></div>
+    <p class="note" style="margin:0 2px">Materialwert = Stückpreis × Gesamtmenge aller Einzelteile (+ Fertigungskosten der Baugruppen). Baugruppen zeigen die Summe ihrer Teile je Stück (Σ).</p>`;
+}
+
+// ── Teil-Detail ──
+let TD=null; // {pid,i,ki,pi}
+const PROP_ORDER=['Beschreibung','Art','Bauteilnummer','Bestellnummer','Hersteller','Herstellernummer','Lieferant','Lieferzeit','Material','Oberfläche','Oberflächenbehandlung','Fertigung','Baureihe','Hauptmaß','Einheit','Länge','Maß','VE','Packungspreis','Preis','Fertigungskosten'];
+function openTeil(i){
+  const st=stack[stack.length-1];if(st.v!=='bom')return;
+  const pid=K()[st.ki].projekte[st.pi].id,m=BOMMEM[pid];if(!m||!m.data||!m.data.positionen[i])return;
+  TD={pid,i,ki:st.ki,pi:st.pi};
+  document.getElementById('teil').hidden=false;push();drawTeil();
+}
+function closeTeilEl(){document.getElementById('teil').hidden=true;document.getElementById('teil').innerHTML='';TD=null}
+function drawTeil(){
+  const el=document.getElementById('teil');if(!TD)return;
+  const d=BOMMEM[TD.pid].data,p=d.positionen[TD.i],k=K()[TD.ki],pr=k.projekte[TD.pi];
+  const zw=bZwischen(d),preis=bPreis(p),kat=bKat(p);
+  const kv=(a,b,cls)=>`<div class="kv"><span>${esc(a)}</span><span class="${cls||''}">${b}</span></div>`;
+  const zeilen=[];
+  zeilen.push(kv('Position',esc(p.pos),'mono'));
+  zeilen.push(kv('Menge in der Baugruppe',p.qty+'×','mono'));
+  zeilen.push(kv('Gesamt im Projekt',p.qty_total+'×','mono'));
+  if(!p.is_asm){
+    if(bMeter(p)){
+      const q=bMassQuelle(p);
+      zeilen.push(kv('Länge je Stück',bMassFehlt(p)?'<span class="pend">fehlt – gerechnet mit 1</span>':esc(fmtMenge(bMassJe(p))+' '+bEinheit(p))+(q?` <small style="color:var(--dim)">(aus Inventor, ${esc(q)})</small>`:''),'mono'));
+    }
+    zeilen.push(kv('Bedarf',esc(bMengeText(p)),'mono'));
+    zeilen.push(kv(bMeter(p)?'Preis je '+bEinheit(p):'Stückpreis',preis>0?eur4(preis):'<span class="pend">kein Preis</span>','mono'));
+    if(preis>0)zeilen.push(kv('Summe',`<b>${eur(preis*bMenge(p))}</b>`,'mono'));
+    const ve=zahlWert(bProp(p,'VE'),0);
+    if(ve>1){const n=Math.ceil(bMenge(p)/ve-1e-9);zeilen.push(kv('Packungen',`${n} × VE ${esc(fmtMenge(ve))}`,'mono'))}
+    const s=bSelbst(p,d.beschaffung);
+    zeilen.push(kv('Wer bezahlt',(s?'ich selbst':'der Kunde')+(p.selbst!=null?' <small style="color:var(--dim)">(abweichend vom Projekt)</small>':'')));
+  }else{
+    const n=d.positionen.filter(x=>bEltern(x.pos)===p.pos).length;
+    zeilen.push(kv('Enthält',n+' Position'+(n===1?'':'en')));
+    if(zw[p.pos]>0)zeilen.push(kv('Summe je Stück',eur(zw[p.pos]),'mono'));
+  }
+  const skip=new Set(['Preis']);
+  const keys=Object.keys(p.props).filter(x=>String(p.props[x]).trim()&&!skip.has(x));
+  keys.sort((a,b)=>{const ia=PROP_ORDER.indexOf(a),ib=PROP_ORDER.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b)});
+  el.innerHTML=`<div class="ohead"><button class="hbtn" data-act="teilclose" aria-label="Schließen">${ic('close')}</button><h2><small>${esc(p.is_asm?'Baugruppe':KATTXT[kat]||'Teil')} · Pos. ${esc(p.pos)}</small>${esc(p.stem||p.filename)}</h2></div>
+    <div class="obody">
+      <section class="sec"><h2>Zeichnung</h2><div class="list" id="tdz"><div class="loading"><span class="spin"></span>Suche Zeichnung …</div></div></section>
+      <div class="card" style="gap:8px">${zeilen.join('')}</div>
+      ${keys.length?`<section class="sec"><h2>Eigenschaften</h2><div class="card" style="gap:8px">${keys.map(x=>kv(x,esc(p.props[x]))).join('')}</div></section>`:''}
+      <section class="sec"><h2>Datei</h2><div class="card"><div class="path"><div><div class="loc">${esc(p.filename)}</div>${p.pfad?`<div class="p">${esc(p.pfad)}</div>`:''}</div></div></div></section>
+    </div>`;
+  zeichnungFuer(pkey(k,pr),p.stem||p.filename.replace(/\.[^.]*$/,'')).then(r=>{
+    const z=document.getElementById('tdz');if(!z||!TD)return;
+    if(r.state==='nolink'){z.innerHTML=`<div class="empty">Kein Zeichnungsordner verknüpft. Verknüpfen im Projekt unter „Zeichnungen“.</div>`;return}
+    if(r.state==='auth'){z.innerHTML=`<div class="row"><div class="main"><div class="t">Anmeldung nötig</div></div><button class="btn small" data-act="login">Anmelden</button></div>`;return}
+    if(r.state==='err'){z.innerHTML=`<div class="empty">Ordner konnte nicht gelesen werden: ${esc(r.msg)}</div>`;return}
+    if(r.state==='none'){z.innerHTML=`<div class="empty">Keine PDF „${esc(r.stem)}…“ im Ordner „${esc(r.ordner)}“${r.sub?' oder seinen Unterordnern':''}.</div>`;return}
+    z.innerHTML=`<button class="row" data-pdf="${esc(r.f.id)}" data-name="${esc(r.f.name)}">${ic('dokument','s ic pdf')}<div class="main"><div class="t wrap">${esc(r.f.name.replace(/\.pdf$/i,''))}</div><div class="m"><span class="mono">${r.f.modifiedTime?esc(new Date(r.f.modifiedTime).toLocaleDateString('de-AT')):''}</span><span class="mono">${r.f.size?fmtSize(r.f.size):''}</span>${r.wo?`<span>${esc(r.wo)}</span>`:''}</div></div><span class="btn small">Öffnen</span></button>`;
+  });
+}
+async function ordnerListe(id){
+  const c=folderCache[id];if(c&&Date.now()-c.t<120000)return c.items;
+  const items=await listChildren(id);folderCache[id]={t:Date.now(),items};return items;
+}
+// Wie fertigung.zeichnung_finden: PDF „<stem>.pdf“, sonst die neueste, die mit dem Stamm beginnt
+async function zeichnungFuer(key,stem){
+  const link=SET.links[key];if(!link)return {state:'nolink'};
+  if(!tokenValid())return {state:'auth'};
+  const s=String(stem).toLowerCase();
+  const pick=items=>{
+    const pdf=items.filter(f=>f.mimeType!==FOLDER&&/\.pdf$/i.test(f.name));
+    const ex=pdf.find(f=>f.name.toLowerCase()===s+'.pdf');if(ex)return ex;
+    return pdf.filter(f=>f.name.toLowerCase().startsWith(s)).sort((a,b)=>String(b.modifiedTime||'').localeCompare(String(a.modifiedTime||'')))[0]||null;
+  };
+  try{
+    const top=await ordnerListe(link.id);
+    let f=pick(top);if(f)return {state:'ok',f};
+    const subs=top.filter(x=>x.mimeType===FOLDER).slice(0,20);
+    for(const sub of subs){f=pick(await ordnerListe(sub.id));if(f)return {state:'ok',f,wo:sub.name}}
+    return {state:'none',stem,ordner:link.name,sub:subs.length>0};
+  }catch(e){return e instanceof AuthErr?{state:'auth'}:{state:'err',msg:e.message}}
 }
 
 function vOrdner(s){header(s.name,s.title||'Ordner');return `<div class="list" data-folder="${esc(s.fid)}"></div>`}
@@ -991,6 +1382,7 @@ function viewHtml(){
   const k=K()[s.ki];
   if(s.v==='kunde'&&k)return vKunde(s.ki);
   if(s.v==='projekt'&&k&&(k.projekte||[])[s.pi])return vProjekt(s.ki,s.pi);
+  if(s.v==='bom'&&k&&(k.projekte||[])[s.pi]&&k.projekte[s.pi].id)return vBom(s.ki,s.pi);
   if(s.v==='ordner')return vOrdner(s);
   stack=[{v:tab}];return tabs[tab]();   // Eintrag existiert nach Neuladen nicht mehr
 }
@@ -1001,6 +1393,12 @@ function render(scrollTop){
   catch(e){console.error(e);html=`<div class="card"><b>Die Daten konnten nicht angezeigt werden.</b><p class="note">${esc(e.message)}. Wähle unter „Einstellungen“ eine gültige pdm_projects.json.</p></div>`}
   document.getElementById('view').innerHTML=html;
   document.querySelectorAll('#view [data-folder]').forEach(el=>fillFolder(el));
+  document.querySelectorAll('#view [data-bom]').forEach(el=>fillBom(el));
+  document.querySelectorAll('#view [data-bomload]').forEach(el=>{
+    bomHolen(el.dataset.bomload).then(()=>{if(stack[stack.length-1].v==='bom')render()}).catch(e=>{
+      if(!el.isConnected)return;
+      el.innerHTML=e instanceof AuthErr?`<div class="row"><div class="main"><div class="t">Anmeldung nötig</div></div><button class="btn small" data-act="login">Anmelden</button></div>`:`<div class="empty">Stückliste konnte nicht geladen werden: ${esc(e.message)}</div>`});
+  });
   if(scrollTop)window.scrollTo(0,0);
 }
 
@@ -1435,7 +1833,7 @@ document.addEventListener('click',ev=>{
     case 'pickdata':openSheet('data');return;
     case 'linkfolder':openSheet('link',d.key);return;
     case 'unlink':delete SET.links[d.key];saveSettings();render();toast('Verknüpfung gelöst.');return;
-    case 'wipe':['vanta_data','vanta_meta','vanta_settings','vanta_auth'].forEach(LS.del);DATA=null;META={};AUTH={};SET={dataFileId:'',dataFileName:'',links:{},theme:'system',accent:'rot'};applyTheme();stack=[{v:tab}];render();toast('Daten von diesem Handy gelöscht. Deine Dateien auf Drive sind unverändert.');return;
+    case 'wipe':['vanta_data','vanta_meta','vanta_settings','vanta_auth','vanta_bom'].forEach(LS.del);BOMC={};Object.keys(BOMMEM).forEach(k=>delete BOMMEM[k]);bomDir=null;DATA=null;META={};AUTH={};SET={dataFileId:'',dataFileName:'',links:{},theme:'system',accent:'rot'};applyTheme();stack=[{v:tab}];render();toast('Daten von diesem Handy gelöscht. Deine Dateien auf Drive sind unverändert.');return;
     case 'sheetback':uiBack();return;
     case 'sheetclose':closeSheet();return;
     case 'sheetpick':{
@@ -1444,6 +1842,10 @@ document.addEventListener('click',ev=>{
       delete folderCache[cur.id];saveSettings();closeSheet();setTimeout(render,50);toast('Ordner verknüpft.');return;
     }
     case 'pvclose':uiBack();return;
+    case 'teilclose':uiBack();return;
+    case 'bomreload':{const st=stack[stack.length-1],pid=K()[st.ki].projekte[st.pi].id;const go2=()=>{bomDir=null;bomHolen(pid,true).then(()=>{render();toast('Stückliste aktualisiert.')}).catch(e=>toast('Laden fehlgeschlagen: '+e.message))};if(!tokenValid())needLogin(go2);else go2();return}
+    case 'bomauf':if(ui.bom)ui.bom.zu.clear();render();return;
+    case 'bomzu':{const st=stack[stack.length-1],m=BOMMEM[K()[st.ki].projekte[st.pi].id];if(ui.bom&&m&&m.data){const kids=new Set(m.data.positionen.map(x=>bEltern(x.pos)));m.data.positionen.forEach(x=>{if(x.is_asm&&kids.has(x.pos))ui.bom.zu.add(x.pos)})}render();return}
     case 'fcancel':formClose();return;
     case 'fsave':formSave();return;
     case 'fdel':formDelete();return;
@@ -1466,6 +1868,10 @@ document.addEventListener('click',ev=>{
   if(d.shOpen){SH.chain.push({id:d.shOpen,name:d.name});SH.depth++;push();loadSheet();return}
   if(d.shFile){SET.dataFileId=d.shFile;SET.dataFileName=d.name;saveSettings();closeSheet();setTimeout(()=>loadData(),50);return}
   if(d.pdf){openPdf(d.pdf,d.name);return}
+  if(d.bteil!=null){openTeil(+d.bteil);return}
+  if(d.btog!=null&&ui.bom){const z=ui.bom.zu;z.has(d.btog)?z.delete(d.btog):z.add(d.btog);render();return}
+  if(d.bmode&&ui.bom){ui.bom.mode=d.bmode;render(true);return}
+  if(d.bfilter&&ui.bom){ui.bom.filter=d.bfilter;render();return}
   if(d.per){ui.zeitPer=d.per;render();return}
   if(d.jahr){ui.umsatzJahr=d.jahr==='alle'?'alle':+d.jahr;render(true);return}
   if(d.themeSet){SET.theme=d.themeSet;applyTheme();saveSettings();render();return}
@@ -1480,8 +1886,8 @@ document.addEventListener('click',ev=>{
 });
 document.addEventListener('input',ev=>{
   if(ev.target.closest('#form')){formInput(ev.target);return}
-  const id=ev.target.id;if(id!=='zq'&&id!=='kq')return;
-  if(id==='zq')ui.zeitQ=ev.target.value;else ui.kundenQ=ev.target.value;
+  const id=ev.target.id;if(id!=='zq'&&id!=='kq'&&id!=='bq')return;
+  if(id==='zq')ui.zeitQ=ev.target.value;else if(id==='bq'){if(ui.bom)ui.bom.q=ev.target.value}else ui.kundenQ=ev.target.value;
   const pos=ev.target.selectionStart;render();
   const el=document.getElementById(id);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}
 });
