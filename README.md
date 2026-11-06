@@ -1,6 +1,6 @@
 # Vanta PDM Mobil
 
-Handy-Version von Vanta PDM (nur lesen): Kunden, Projekte, Zeiterfassung, Kalkulation, Umsatz und Zeichnungs-PDFs direkt aus Google Drive.
+Handy-Version von Vanta PDM ZW3D: Kunden, Projekte, Tasks und Zeiten unterwegs anlegen und bearbeiten. Abgleich mit Vanta am PC über den Google-Drive-Ordner „Vanta Mobil“ (vanta_pc.json ↔ handy_*.json).
 
 - Läuft komplett im Browser, ohne eigenen Server.
 - Daten kommen direkt von Google Drive auf das Handy.
