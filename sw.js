@@ -1,7 +1,7 @@
 // Vanta PDM Mobil – Service Worker
 // Hält die App-Dateien vor, damit sie schnell und auch ohne Netz startet.
 // Google-Anmeldung und Drive gehen immer direkt ins Netz.
-const STAND = "vanta-2026-11-06-zw3d";
+const STAND = "vanta-2026-11-07-stueckliste";
 const DATEIEN = ["./", "index.html", "config.js", "manifest.webmanifest",
   "icon-192.png", "icon-512.png", "icon-maskable-192.png",
   "icon-maskable-512.png", "apple-touch-icon.png", "favicon-32.png"];

@@ -180,6 +180,48 @@ nav.tabs button .dot{position:absolute;top:4px;right:calc(50% - 16px);width:8px;
 .errbox{color:var(--err);font-size:14px;margin-bottom:10px}
 .sheet .actions{display:flex;gap:8px;margin-top:6px}
 .sheet .actions .btn{flex:1}
+.ftyp{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex:none;background:var(--s2);color:var(--muted)}
+.ftyp.ordner{background:var(--acc-soft);color:var(--acc-t)}
+.ftyp.pdf{background:color-mix(in srgb,var(--err) 12%,transparent);color:var(--err)}
+.ftyp.bild{background:color-mix(in srgb,var(--info) 12%,transparent);color:var(--info)}
+.ftyp.cad{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+.dk{display:flex;flex-wrap:wrap;gap:8px}
+.dk .btn{flex:1 1 auto}
+.krumen{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere;margin:-6px 2px 0}
+.viewer{background:var(--s2);border:1px solid var(--border);border-radius:12px;overflow:auto;max-height:calc(100vh - 230px);-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom}
+.viewer canvas,.viewer img{display:block;margin:0 auto 8px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.vbar{display:flex;align-items:center;gap:8px}
+.vbar .z{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;min-width:46px;text-align:center}
+.vbar .sp{flex:1}
+.loading{display:flex;align-items:center;gap:10px;padding:16px;color:var(--muted)}
+.linkbtn{color:var(--acc-t);font-weight:600;font-size:14px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--s2);border-radius:10px;padding:3px;gap:3px}
+.seg button{padding:8px 4px;border-radius:8px;font-size:14px;color:var(--muted);font-weight:500}
+.seg button.on{background:var(--s1);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{text-align:right;overflow-wrap:anywhere;min-width:0}
+.pend{color:var(--warn)!important}
+.pill.k-zukauf{background:color-mix(in srgb,#1560BD 14%,transparent);color:color-mix(in srgb,#1560BD 70%,var(--text))}
+.pill.k-norm{background:color-mix(in srgb,#5A4FCF 14%,transparent);color:color-mix(in srgb,#5A4FCF 70%,var(--text))}
+.pill.k-eigen{background:color-mix(in srgb,#2F5D3A 16%,transparent);color:var(--acc-t)}
+.btree .brow{display:flex;align-items:stretch;border-top:1px solid var(--border);padding-left:calc(var(--d,0) * 14px)}
+.btree .brow:first-child{border-top:0}
+.btree .brow.asm{background:color-mix(in srgb,var(--acc) 6%,transparent)}
+.btree .brow.asm .t{font-weight:700}
+.btree .brow.nop,.row.nop{background:color-mix(in srgb,var(--warn) 7%,transparent)}
+.btog{flex:none;width:34px;display:flex;align-items:center;justify-content:center;color:var(--dim)}
+.btog svg{transition:transform .15s}
+.btog.open svg{transform:rotate(90deg)}
+.bmain{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:10px 14px 10px 2px;text-align:left}
+.bmain:active{background:var(--s2)}
+.bmain .main{flex:1;min-width:0}
+.bmain .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bmain .m{font-size:13px;color:var(--muted);display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center}
+.bmain .r{text-align:right;flex:none}
+.bmain .r .num{display:block;font-size:14px}
+.bmain .r small{display:block;font-size:12px;color:var(--muted)}
+.bpos{font-size:12px;color:var(--acc-t);margin-right:6px;font-weight:600;font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -220,7 +262,16 @@ const ICON={
   back:'<path d="M15 6l-6 6 6 6"/>', chev:'<path d="M9 6l6 6-6 6"/>',
   suchen:'<circle cx="10" cy="10" r="7"/><path d="M21 21l-6-6"/>',
   plus:'<path d="M12 5v14"/><path d="M5 12h14"/>', stift:'<path d="M4 20h4L19 9l-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/>',
-  x:'<path d="M6 6l12 12"/><path d="M18 6L6 18"/>'
+  x:'<path d="M6 6l12 12"/><path d="M18 6L6 18"/>',
+  kunden:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+  pdf:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M8.5 13h1.2a1.3 1.3 0 0 1 0 2.6H8.5V12m4 0v4h.8a1.6 1.6 0 0 0 1.6-1.6v-.8a1.6 1.6 0 0 0-1.6-1.6zm4.5 4v-4h2m-2 2h1.5"/>',
+  datei:'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>',
+  bild:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/>',
+  cad:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
+  tabelle:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
+  extern:'<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  minus:'<path d="M5 12h14"/>',
+  drive:'<path d="M8 3h8l6 10-4 7H6l-4-7z"/><path d="M8 3l6 10H2M16 3L10 13l-4 7M22 13H10"/>'
 };
 const ic=(n,c="")=>`<svg class="i ${c}" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
 // Logo A: H mit Maßlinie (vereinfacht)
@@ -557,7 +608,7 @@ function naechsteNummer(k){
 
 // ═════════════════════════ Navigation ═════════════════════════
 let tab="start", stack=[{v:"start"}], openTasks=new Set(), umsatzJahr=null, zeitQ="", kundenQ="";
-const TABS=[["start","Start","haus"],["kunden","Kunden","ordner"],["zeiten","Zeiten","zeit"],["umsatz","Umsatz","umsatz"],["sync","Abgleich","sync"]];
+const TABS=[["start","Start","haus"],["kunden","Kunden","kunden"],["projekte","Projekte","ordner"],["umsatz","Umsatz","umsatz"],["sync","Abgleich","sync"]];
 function go(v){stack.push(v);render(true)}
 function back(){if(stack.length>1){stack.pop();render(true)}}
 function setTab(t){tab=t;stack=[{v:t}];render(true)}
@@ -679,9 +730,10 @@ function vProjekt(pid){
     ${String(p.status)==="abgebrochen"?`<p class="note">Abgebrochen — geleistete Arbeit wird ${p.abbruch&&p.abbruch.verrechnen?"trotzdem verrechnet":"nicht verrechnet (abgeschrieben)"}.</p>`:""}
     ${pauschal&&c.h>0&&!p.eigenprojekt?`<p class="note">Effektiver Stundensatz: <span class="num">${eur(c.betrag/c.h)}/h</span></p>`:""}
     ${p.beschreibung?`<div class="desc">${esc(p.beschreibung)}</div>`:""}
-    ${p.ordner?`<div class="path">${ic("ordner","s")}<span>${esc(p.ordner)}</span></div>`:""}
+    ${ordnerKnoepfe(p,k)}
   </div>
   <section class="sec"><h2>Tasks <span class="a"><button data-act="task-neu" data-pid="${esc(p.id)}">+ Task</button></span></h2><div class="list">${tasks||'<div class="empty">Noch keine Tasks — „+ Task“ oder gleich „Zeit“ erfassen.</div>'}</div></section>
+  ${bomAbschnitt(k,p)}
   ${bel.length?`<section class="sec"><h2>Rechnungen</h2><div class="list">${bel.map(belegRow).join("")}</div></section>`:""}
   ${kal?`<section class="sec"><h2>Kalkulation <span class="n">Stand ${esc(kal.stand||"")}</span></h2><div class="list kalk">
     ${kal.positionen.map(x=>`<div class="pos"><span>${esc(x.text)}</span><span class="q">${nz(x.menge).toLocaleString("de-AT")} ${esc(x.einheit||"")} × ${eur(x.preis)}</span><span class="s">${eur(nz(x.menge)*nz(x.preis))}</span></div>`).join("")}
@@ -746,6 +798,512 @@ function vSync(){
   <p class="note">Läuft Vanta am PC, übernimmt es deine Änderungen innerhalb von etwa 10 Sekunden, sobald Google Drive die Datei geladen hat. Sonst beim nächsten Start.</p></section>
   <section class="sec"><h2>Zuletzt am PC übernommen</h2><div class="list">${prot.map(x=>`<div class="row"><div class="main"><div class="t" style="white-space:normal">${esc(x.text)}</div><div class="m">${esc(x.zeit)}</div></div></div>`).join("")||'<div class="empty">Noch nichts.</div>'}</div></section>
   <section class="sec"><h2>So funktioniert es</h2><div class="card"><p class="note">Handy und PC haben je eine eigene Datei im Drive-Ordner „Vanta Mobil“. Jede Änderung trägt Datum und Uhrzeit. Der PC pflegt neuere Einträge vom Handy ein. Wurde dasselbe Feld auf beiden Seiten geändert oder etwas doppelt angelegt, fragt Vanta am PC nach. Rechnungen und Zahlungen bleiben am Handy nur zum Ansehen.</p></div></section>`;
+}
+
+
+// ═════════════════════════ Dateien (Google Drive) ═════════════════════════
+// Zeigt die Projektordner so, wie sie in Google Drive liegen. Pfade aus Vanta
+// („H:/Meine Ablage/…“) werden Ordner für Ordner in Drive-IDs übersetzt.
+const FOLDER="application/vnd.google-apps.folder", SHORTCUT="application/vnd.google-apps.shortcut";
+const LISTE={}, PFADID={}, LADE={};
+const qEsc=s=>String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+function drivePfad(pfad){
+  const n=String(pfad||"").replace(/\\/g,"/").replace(/\/+$/,"");
+  const m=/^[A-Za-z]:\/(?:Meine Ablage|My Drive)(?:\/(.*))?$/i.exec(n);
+  return m?(m[1]||"").split("/").filter(Boolean):null;
+}
+async function pfadAufloesen(pfad){
+  if(PFADID[pfad]!==undefined)return PFADID[pfad];
+  const teile=drivePfad(pfad); if(!teile)return null;
+  let id="root";
+  for(const t of teile){
+    const r=await api(`${API}/files?q=${q(`name = '${qEsc(t)}' and '${id}' in parents and trashed = false and (mimeType = '${FOLDER}' or mimeType = '${SHORTCUT}')`)}&fields=${q("files(id,mimeType,shortcutDetails)")}&pageSize=5&spaces=drive`);
+    const j=await r.json(); const f=(j.files||[])[0];
+    if(!f){PFADID[pfad]=false;return false}
+    id=f.mimeType===SHORTCUT?(f.shortcutDetails&&f.shortcutDetails.targetId)||f.id:f.id;
+  }
+  PFADID[pfad]=id; return id;
+}
+async function ordnerLaden(fid){
+  let alle=[],token="";
+  do{
+    const r=await api(`${API}/files?q=${q(`'${fid}' in parents and trashed = false`)}&fields=${q("nextPageToken,files(id,name,mimeType,modifiedTime,size,webViewLink,shortcutDetails)")}&orderBy=${q("folder,name_natural")}&pageSize=200&spaces=drive${token?"&pageToken="+q(token):""}`);
+    const j=await r.json(); alle=alle.concat(j.files||[]); token=j.nextPageToken||"";
+  }while(token&&alle.length<2000);
+  LISTE[fid]=alle.map(f=>{
+    if(f.mimeType===SHORTCUT&&f.shortcutDetails){return Object.assign({},f,{id:f.shortcutDetails.targetId,mimeType:f.shortcutDetails.targetMimeType||f.mimeType})}
+    return f;
+  }).sort((a,b)=>((b.mimeType===FOLDER)-(a.mimeType===FOLDER))||String(a.name).localeCompare(String(b.name),"de",{numeric:true}));
+  return LISTE[fid];
+}
+function dateiArt(f){
+  if(f.mimeType===FOLDER)return "ordner";
+  const n=String(f.name||"").toLowerCase();
+  if(f.mimeType==="application/pdf"||n.endsWith(".pdf"))return "pdf";
+  if(/^image\//.test(f.mimeType||"")||/\.(png|jpe?g|gif|webp|bmp)$/.test(n))return "bild";
+  if(/\.(step|stp|igs|iges|stl|z3prt|z3asm|z3drw|ipt|iam|idw|sldprt|sldasm|slddrw|dxf|dwg|x_t)$/.test(n))return "cad";
+  if(/\.(xlsx?|csv|ods)$/.test(n)||/spreadsheet/.test(f.mimeType||""))return "tabelle";
+  return "datei";
+}
+const ARTICON={ordner:"ordner",pdf:"pdf",bild:"bild",cad:"cad",tabelle:"tabelle",datei:"datei"};
+function groesse(b){b=+b||0;if(!b)return "";if(b<1024)return b+" B";if(b<1048576)return Math.round(b/1024)+" KB";return (b/1048576).toLocaleString("de-AT",{maximumFractionDigits:1})+" MB"}
+function datum(iso){const d=new Date(iso);return isNaN(d)?"":`${p2(d.getDate())}.${p2(d.getMonth()+1)}.${d.getFullYear()}`}
+const driveLink=f=>f.webViewLink||(f.mimeType===FOLDER?`https://drive.google.com/drive/folders/${f.id}`:`https://drive.google.com/file/d/${f.id}/view`);
+
+function dateiZeile(f){
+  const art=dateiArt(f), info=[art==="ordner"?"":groesse(f.size),datum(f.modifiedTime)].filter(Boolean).join(" · ");
+  const inner=`<span class="ftyp ${art}">${ic(ARTICON[art],"s")}</span><div class="main"><div class="t" style="white-space:normal;overflow-wrap:anywhere">${esc(f.name)}</div><div class="m">${esc(info)}</div></div>`;
+  if(art==="ordner")return `<button class="row" data-act="ordner" data-fid="${esc(f.id)}" data-titel="${esc(f.name)}">${inner}${ic("chev","s chev")}</button>`;
+  if(art==="pdf"||art==="bild")return `<button class="row" data-act="${art}" data-fid="${esc(f.id)}" data-titel="${esc(f.name)}" data-link="${esc(driveLink(f))}">${inner}${ic("chev","s chev")}</button>`;
+  return `<a class="row" href="${esc(driveLink(f))}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${inner}${ic("extern","s chev")}</a>`;
+}
+function ordnerKnoepfe(p,k){
+  const liste=[];
+  if(p.ordner)liste.push({titel:"Projektordner",pfad:p.ordner});
+  (p.daten_ordner||[]).forEach(d=>{if(d&&d.pfad&&d.pfad!==p.ordner)liste.push({titel:d.rolle||String(d.pfad).split(/[\\/]/).pop(),pfad:d.pfad})});
+  if(!liste.length)return "";
+  return `<div class="dk">${liste.map(x=>{
+    const ok=!!drivePfad(x.pfad);
+    return `<button class="btn ${ok?"":"ghost"}" data-act="ordner" data-pfad="${esc(x.pfad)}" data-titel="${esc(x.titel)}" data-sub="${esc(p.nummer||one(p.name))}" ${ok?"":"disabled title=\"Liegt nicht auf Google Drive\""}>${ic("ordner","s")}${esc(x.titel==="Projektordner"?"Dateien":x.titel)}</button>`}).join("")}</div>
+    ${liste.some(x=>!drivePfad(x.pfad))?`<p class="note">Ordner außerhalb von Google Drive (z. B. X:) sind nur am PC erreichbar.</p>`:""}`;
+}
+
+function vProjekte(){
+  header("Projekte","",`<button class="ib" data-act="suche" aria-label="Dateien suchen">${ic("suchen")}</button>`);
+  fab("");
+  const lauf=[],fertig=[];
+  V.kunden.forEach(k=>(k.projekte||[]).forEach(p=>{
+    const st=String(p.status||"aktiv"), hat=!!(p.ordner&&drivePfad(p.ordner));
+    (st==="abgeschlossen"||st==="abgebrochen"?fertig:lauf).push({k,p,hat,l:lastDate(p)});
+  }));
+  lauf.sort((a,b)=>b.l-a.l); fertig.sort((a,b)=>b.l-a.l);
+  const zeile=x=>`<button class="row" data-act="ordner" data-pfad="${esc(x.p.ordner||"")}" data-titel="${esc(x.p.nummer||one(x.p.name))}" data-sub="${esc(one(x.k.name))}" ${x.hat?"":"disabled"} ${x.hat?"":'style="opacity:.55"'}>
+    <span class="ftyp ordner">${ic("ordner","s")}</span><div class="main"><div class="t">${esc(one(x.p.name))}</div>
+    <div class="m"><span class="tag">${esc(x.p.nummer||"—")}</span><span>${esc(one(x.k.name))}</span>${x.hat?"":"<span>kein Drive-Ordner</span>"}</div></div>${x.hat?ic("chev","s chev"):""}</button>`;
+  const pf=(PC&&PC.pfade)||{};
+  const ablage=[["Meine Ablage","H:/Meine Ablage"]];
+  if(pf.home&&drivePfad(pf.home)&&pf.home.replace(/\\/g,"/")!=="H:/Meine Ablage")ablage.push(["CAD Bibliothek",pf.home]);
+  if(pf.norm&&drivePfad(pf.norm))ablage.push(["Normteile",pf.norm]);
+  if(pf.zukauf&&drivePfad(pf.zukauf))ablage.push(["Zukaufteile",pf.zukauf]);
+  return `<label class="search">${ic("suchen","s")}<input id="dq" type="search" enterkeyhint="search" placeholder="Datei suchen, z. B. ADH019 000 004" autocomplete="off"></label>
+  <section class="sec"><h2>Laufende Projekte <span class="n">${lauf.length}</span></h2><div class="list">${lauf.map(zeile).join("")||'<div class="empty">Keine.</div>'}</div></section>
+  <section class="sec"><h2>Ablage</h2><div class="list">${ablage.map(([t,pf])=>`<button class="row" data-act="ordner" data-pfad="${esc(pf)}" data-titel="${esc(t)}"><span class="ftyp ordner">${ic(t==="Meine Ablage"?"drive":"ordner","s")}</span><div class="main"><div class="t">${esc(t)}</div><div class="m">${esc(pf)}</div></div>${ic("chev","s chev")}</button>`).join("")}</div></section>
+  ${fertig.length?`<section class="sec"><h2>Abgeschlossene Projekte <span class="n">${fertig.length}</span></h2><div class="list">${fertig.map(zeile).join("")}</div></section>`:""}`;
+}
+
+function ladenUndZeigen(key,fn){
+  if(LADE[key])return;
+  LADE[key]=fn().then(()=>{delete LADE[key];const s=stack[stack.length-1];if(s&&s._key===key)render()})
+    .catch(e=>{delete LADE[key];const s=stack[stack.length-1];if(s&&s._key===key){s._fehler=e;render()}});
+}
+function fehlerKarte(e,s){
+  const auth=e&&e.code==="auth";
+  return `<div class="card"><b>${auth?"Bitte bei Google anmelden.":"Konnte nicht geladen werden."}</b><p class="note">${esc(auth?"Ohne Anmeldung sind die Dateien nicht erreichbar.":fehlerText(e))}</p>
+    <button class="btn" data-act="${auth?"anmelden":"neu-laden"}">${auth?"Anmelden":"Erneut versuchen"}</button></div>`;
+}
+const laedt=t=>`<div class="list"><div class="loading"><span class="spin"></span>${esc(t)}</div></div>`;
+
+function vOrdner(s){
+  header(s.titel||"Ordner",s.sub||"Ordner",s.fid?`<a class="ib" href="https://drive.google.com/drive/folders/${esc(s.fid)}" target="_blank" rel="noopener" aria-label="In Google Drive öffnen">${ic("extern")}</a>`:"");
+  fab("");
+  if(s._fehler){const e=s._fehler;delete s._fehler;return fehlerKarte(e,s)}
+  if(!driveBereit())return fehlerKarte({code:"auth"},s);
+  if(!s.fid){
+    if(s.pfad==null)return '<div class="card"><p class="note">Kein Ordner.</p></div>';
+    if(PFADID[s.pfad]===false)return `<div class="card"><b>Ordner nicht gefunden</b><p class="note">Auf Google Drive gibt es den Ordner nicht (mehr):</p><p class="note">${esc(s.pfad)}</p><button class="btn ghost" data-act="pfad-neu">Erneut suchen</button></div>`;
+    if(PFADID[s.pfad]){s.fid=PFADID[s.pfad];return vOrdner(s)}
+    s._key="pfad:"+s.pfad; ladenUndZeigen(s._key,()=>pfadAufloesen(s.pfad));
+    return laedt("Suche den Ordner auf Google Drive …");
+  }
+  s._key="ordner:"+s.fid;
+  const l=LISTE[s.fid];
+  if(!l){ladenUndZeigen(s._key,()=>ordnerLaden(s.fid));return laedt("Lade Ordner …")}
+  const ordner=l.filter(f=>f.mimeType===FOLDER), dateien=l.filter(f=>f.mimeType!==FOLDER);
+  const pdfs=dateien.filter(f=>dateiArt(f)==="pdf").length;
+  return `${s.pfad?`<p class="krumen">${esc(s.pfad)}</p>`:""}
+    ${ordner.length?`<section class="sec"><h2>Ordner <span class="n">${ordner.length}</span></h2><div class="list">${ordner.map(dateiZeile).join("")}</div></section>`:""}
+    ${dateien.length?`<section class="sec"><h2>Dateien <span class="n">${dateien.length}${pdfs?` · ${pdfs} PDF`:""}</span></h2><div class="list">${dateien.map(dateiZeile).join("")}</div></section>`:""}
+    ${!l.length?'<div class="list"><div class="empty">Dieser Ordner ist leer.</div></div>':""}
+    <button class="btn ghost wide" data-act="neu-laden">${ic("sync","s")}Neu laden</button>`;
+}
+
+// ── PDF-Ansicht (pdf.js) ──
+const PDFJS_VER="3.11.174";
+let PDFJS=null;
+function pdfjsLaden(){
+  if(PDFJS)return PDFJS;
+  PDFJS=new Promise((ok,nein)=>{
+    const sc=document.createElement("script");
+    sc.src=`https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VER}/pdf.min.js`;
+    sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc=`https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VER}/pdf.worker.min.js`;ok(window.pdfjsLib)}catch(e){nein(e)}};
+    sc.onerror=()=>{PDFJS=null;nein({code:"offline",message:"PDF-Anzeige konnte nicht geladen werden"})};
+    document.head.appendChild(sc);
+  });
+  return PDFJS;
+}
+const PDFDOC={};
+async function pdfLaden(fid){
+  const lib=await pdfjsLaden();
+  const r=await api(`${API}/files/${fid}?alt=media`);
+  const daten=new Uint8Array(await r.arrayBuffer());
+  PDFDOC[fid]=await lib.getDocument({data:daten}).promise;
+  return PDFDOC[fid];
+}
+function vPdf(s){
+  header(s.titel||"PDF","Zeichnung",s.link?`<a class="ib" href="${esc(s.link)}" target="_blank" rel="noopener" aria-label="In Google Drive öffnen">${ic("extern")}</a>`:"");
+  fab("");
+  if(s._fehler){const e=s._fehler;delete s._fehler;return fehlerKarte(e,s)}
+  s._key="pdf:"+s.fid; s.zoom=s.zoom||1;
+  const doc=PDFDOC[s.fid];
+  if(!doc){ladenUndZeigen(s._key,()=>pdfLaden(s.fid));return laedt("Lade PDF …")}
+  setTimeout(()=>pdfZeichnen(s),0);
+  return `<div class="vbar"><button class="btn small ghost" data-act="zoom" data-d="-1" aria-label="Verkleinern">${ic("minus","s")}</button><span class="z" id="zt">${Math.round(s.zoom*100)} %</span>
+    <button class="btn small ghost" data-act="zoom" data-d="1" aria-label="Vergrößern">${ic("plus","s")}</button><span class="sp"></span><span class="note">${doc.numPages} Seite${doc.numPages>1?"n":""}</span></div>
+    <div class="viewer" id="pv"></div>
+    <p class="note">Mit + / − zoomen, dann im Bild verschieben. Querformat drehen zeigt mehr.</p>`;
+}
+let PDF_LAUF=0;
+async function pdfZeichnen(s){
+  const doc=PDFDOC[s.fid], box=document.getElementById("pv"); if(!doc||!box)return;
+  const lauf=++PDF_LAUF; box.innerHTML="";
+  const breite=Math.max(200,box.clientWidth-16), dpr=Math.min(window.devicePixelRatio||1,3);
+  for(let i=1;i<=doc.numPages;i++){
+    if(lauf!==PDF_LAUF)return;
+    const seite=await doc.getPage(i), vp0=seite.getViewport({scale:1});
+    const css=breite*s.zoom/vp0.width, vp=seite.getViewport({scale:css*dpr});
+    const c=document.createElement("canvas"); c.width=Math.floor(vp.width); c.height=Math.floor(vp.height);
+    c.style.width=Math.floor(vp.width/dpr)+"px"; c.style.height=Math.floor(vp.height/dpr)+"px";
+    box.appendChild(c);
+    try{await seite.render({canvasContext:c.getContext("2d"),viewport:vp}).promise}catch(e){}
+  }
+}
+const BILD={};
+function vBild(s){
+  header(s.titel||"Bild","Bild",s.link?`<a class="ib" href="${esc(s.link)}" target="_blank" rel="noopener" aria-label="In Google Drive öffnen">${ic("extern")}</a>`:"");
+  fab("");
+  if(s._fehler){const e=s._fehler;delete s._fehler;return fehlerKarte(e,s)}
+  s._key="bild:"+s.fid; s.zoom=s.zoom||1;
+  if(!BILD[s.fid]){ladenUndZeigen(s._key,async()=>{const r=await api(`${API}/files/${s.fid}?alt=media`);BILD[s.fid]=URL.createObjectURL(await r.blob())});return laedt("Lade Bild …")}
+  return `<div class="vbar"><button class="btn small ghost" data-act="zoom" data-d="-1">${ic("minus","s")}</button><span class="z">${Math.round(s.zoom*100)} %</span><button class="btn small ghost" data-act="zoom" data-d="1">${ic("plus","s")}</button></div>
+    <div class="viewer"><img src="${BILD[s.fid]}" alt="${esc(s.titel)}" style="width:${Math.round(100*s.zoom)}%;max-width:none"></div>`;
+}
+
+// ── Suche über ganz Drive ──
+async function suchen(text){
+  const r=await api(`${API}/files?q=${q(`name contains '${qEsc(text)}' and trashed = false`)}&fields=${q("files(id,name,mimeType,modifiedTime,size,webViewLink,shortcutDetails)")}&orderBy=${q("modifiedTime desc")}&pageSize=60&spaces=drive`);
+  const j=await r.json(); return j.files||[];
+}
+function vSuche(s){
+  header("Suche",s.text?`„${s.text}“`:"Dateien");
+  fab("");
+  if(s._fehler){const e=s._fehler;delete s._fehler;return fehlerKarte(e,s)}
+  const feld=`<label class="search">${ic("suchen","s")}<input id="dq" type="search" enterkeyhint="search" value="${esc(s.text||"")}" placeholder="Dateiname oder Zeichnungsnummer" autocomplete="off"></label>`;
+  if(!s.text)return feld+'<p class="note">Sucht in ganz Google Drive nach Dateinamen.</p>';
+  if(!driveBereit())return feld+fehlerKarte({code:"auth"},s);
+  s._key="suche:"+s.text;
+  if(!s.erg){ladenUndZeigen(s._key,async()=>{s.erg=await suchen(s.text)});return feld+laedt("Suche …")}
+  return feld+`<section class="sec"><h2>Treffer <span class="n">${s.erg.length}${s.erg.length>=60?"+":""}</span></h2><div class="list">${s.erg.map(dateiZeile).join("")||'<div class="empty">Nichts gefunden.</div>'}</div></section>`;
+}
+function sucheStarten(text){text=String(text||"").trim();if(!text)return;const s=stack[stack.length-1];if(s&&s.v==="suche"){s.text=text;s.erg=null;render()}else go({v:"suche",text})}
+
+
+// ═════════════════════════ Stückliste ═════════════════════════
+// Quelle: Vanta am PC → Projekt → Reiter „Konstruktion“ → einlesen
+// (pdm_bom/<Projekt-ID>.json). Der PC legt eine Kopie in den Drive-Ordner
+// „Vanta Mobil/stueckliste“. Rechnung wie bom_builder / project_cad /
+// bestellliste – übernommen aus der früheren Handy-App.
+function eur4(v){const n=+v||0,t=n.toFixed(4).split('.');let d=t[1].replace(/0+$/,'');if(d.length<2)d=d.padEnd(2,'0');return (+t[0]).toLocaleString('de-AT')+','+d+' €'}
+function zahlWert(t,v=0){let s=String(t??'').trim();if(!s)return v;s=s.replace(/[^0-9,.\-]/g,'');if(!s)return v;
+  if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(','))s=s.replace(',','.');
+  const n=Number(s);return isFinite(n)?n:v}
+function preisWert(t){let s=String(t??'').trim();if(!s)return 0;s=s.replace(/€|EUR|eur|\s/g,'');
+  if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(','))s=s.replace(',','.');
+  const n=Number(s);return isFinite(n)?n:0}
+const bProp=(p,k)=>String((p.props||{})[k]??'').trim();
+const bEinheit=p=>bProp(p,'Einheit')||'Stk';
+const bMeter=p=>!['','stk','stück','stueck','stk.','st'].includes(bEinheit(p).toLowerCase());
+function bMassEigen(p){const w=zahlWert(bProp(p,'Länge'),0);return w>0?w:zahlWert(bProp(p,'Maß'),0)}
+function bMassAuto(p){
+  if(!bMeter(p))return 0;const e=bEinheit(p).toLowerCase();
+  if(e==='kg')return +p.auto_kg||0;
+  const f={m:100,cm:1,mm:0.1}[e];if(!f)return 0;
+  const cm=+p.auto_cm||0;return cm>0?Math.round(cm/f*1e4)/1e4:0;
+}
+function bMassJe(p){if(!bMeter(p))return 1;const w=bMassEigen(p);if(w>0)return w;const a=bMassAuto(p);return a>0?a:1}
+const bMassFehlt=p=>bMeter(p)&&bMassEigen(p)<=0&&bMassAuto(p)<=0;
+function bMassQuelle(p){if(bMassEigen(p)>0||bMassAuto(p)<=0)return '';return bEinheit(p).toLowerCase()==='kg'?'Masse':(p.auto_quelle||'Parameter')}
+const bMenge=p=>(p.qty_total||1)*bMassJe(p);
+function fmtMenge(v){const f=+v||0;if(Math.abs(f-Math.round(f))<0.0005)return String(Math.round(f));return f.toFixed(3).replace(/0+$/,'').replace(/\.$/,'').replace('.',',')}
+const bMengeText=p=>fmtMenge(bMenge(p))+(bMeter(p)?' '+bEinheit(p):' Stk');
+const bPreis=p=>preisWert(bProp(p,'Preis'));
+function bKat(p){
+  if(p.is_asm)return 'bg';
+  const a=bProp(p,'Art').toLowerCase();
+  if(/^(zukauf|kaufteil|zt)/.test(a))return 'zukauf';
+  if(/^(norm|nt)/.test(a))return 'norm';
+  return a?'eigen':'';
+}
+const bSelbst=(p,besch)=>p.is_asm?false:(p.selbst!=null?!!p.selbst:besch==='selbst');
+function lzTage(text){ // project_cad: Zahl ohne Einheit = Tage
+  const s=String(text||'').trim().toLowerCase();if(!s)return null;
+  const z=s.match(/\d+(?:[.,]\d+)?/g);if(!z)return null;
+  const w=Math.max(...z.map(x=>parseFloat(x.replace(',','.'))));
+  for(const [ws,f] of [[['woche','wochen','wo','wk'],7],[['monat','monate','mon'],30],[['tag','tage','td','at','werktage','werktag'],1]])
+    for(const x of ws)if(new RegExp('\\b'+x).test(s))return w*f;
+  return w;
+}
+function lzTageBL(text){ // bestellliste: Zahl ohne Einheit = Wochen
+  const s=String(text||'').trim().toLowerCase();if(!s)return 0;
+  const z=s.match(/\d+(?:[.,]\d+)?/g);if(!z)return 0;
+  const w=Math.max(...z.map(x=>parseFloat(x.replace(',','.'))));
+  for(const [ws,f] of [[['woche','wochen','w','wo','kw'],7],[['tag','tage','t','d','werktage','arbeitstage'],1],[['monat','monate','m','mon'],30]])
+    for(const x of ws)if(new RegExp('\\b'+x+'\\b').test(s))return Math.round(w*f);
+  return Math.round(w*7);
+}
+function lzText(t){if(t<=0)return 'unbekannt';if(t%7===0&&t>=7){const w=t/7;return w+' Woche'+(w!==1?'n':'')}return t+' Tag'+(t!==1?'e':'')}
+function bomKennzahlen(d){
+  const o={positionen:0,teile:0,baugruppen:0,zukauf:0,norm:0,eigen:0,materialwert:0,auslagen:0,ohne_preis:0,selbst_positionen:0,lz:null,lzText:''};
+  if(!d)return o;
+  d.positionen.forEach(p=>{
+    o.positionen++;
+    if(p.is_asm){o.baugruppen++;o.materialwert+=preisWert(bProp(p,'Fertigungskosten'))*bMenge(p);return}
+    o.teile++;
+    const k=bKat(p);if(k)o[k]++;
+    const pr=bPreis(p),m=bMenge(p);
+    if(pr<=0)o.ohne_preis++;
+    o.materialwert+=pr*m;
+    if(bSelbst(p,d.beschaffung)){o.selbst_positionen++;o.auslagen+=pr*m}
+    const t=lzTage(bProp(p,'Lieferzeit'));
+    if(t!=null&&(o.lz==null||t>o.lz)){o.lz=t;o.lzText=bProp(p,'Lieferzeit')}
+  });
+  o.materialwert=Math.round(o.materialwert*100)/100;o.auslagen=Math.round(o.auslagen*100)/100;
+  return o;
+}
+const bEltern=pos=>pos.includes('.')?pos.slice(0,pos.lastIndexOf('.')):'';
+function bZwischen(d){ // Preis je Baugruppe (1 Stück) = eigene Kosten + Teile × Menge
+  const kinder={};d.positionen.forEach(p=>(kinder[bEltern(p.pos)]=kinder[bEltern(p.pos)]||[]).push(p));
+  const out={};
+  const sum=(p,t)=>{if(!p.is_asm)return bPreis(p)*bMassJe(p);if(t>12)return 0;
+    let s=preisWert(bProp(p,'Fertigungskosten'));(kinder[p.pos]||[]).forEach(k=>s+=sum(k,t+1)*k.qty);out[p.pos]=s;return s};
+  d.positionen.forEach(p=>{if(p.is_asm)sum(p,0)});
+  return out;
+}
+const EIGEN_W=['eigen','dreh','fräs','fraes','blech','schweiß','schweiss','laser','kant','3d','druckteil'];
+function bIstEigen(p){const a=bProp(p,'Art').toLowerCase();return EIGEN_W.some(w=>a.includes(w))}
+function bomGruppen(d){ // wie bestellliste.gruppieren (Baumenge 1)
+  const nach={},gleich={};
+  d.positionen.forEach((p,i)=>{
+    if(p.is_asm)return;
+    if(!bProp(p,'Lieferant')&&bIstEigen(p))return;
+    const lf=bProp(p,'Lieferant')||'Ohne Lieferant';
+    const key=lf+'|'+(p.pfad||p.filename).toLowerCase();
+    const menge=bMenge(p);
+    if(gleich[key]){gleich[key].menge+=menge;if(p.pos)gleich[key].pos+=', '+p.pos;return}
+    const ve=zahlWert(bProp(p,'VE'),0);
+    const e={i,datei:p.filename,stem:p.stem,beschreibung:bProp(p,'Beschreibung'),bestellnummer:bProp(p,'Bestellnummer'),menge,
+      einheit:bMeter(p)?bEinheit(p):'Stk',preis:bPreis(p),ve:ve>0?ve:0,tage:lzTageBL(bProp(p,'Lieferzeit')),lieferzeit:bProp(p,'Lieferzeit'),pos:p.pos};
+    gleich[key]=e;
+    const g=nach[lf]=nach[lf]||{lieferant:lf,positionen:[],summe:0,reste:0,tage:0,unvollstaendig:0};
+    g.positionen.push(e);g.tage=Math.max(g.tage,e.tage);
+  });
+  const gs=Object.values(nach);
+  gs.forEach(g=>{
+    g.positionen.forEach(e=>{
+      if(e.ve>1&&e.menge>0){e.packungen=Math.ceil(e.menge/e.ve-1e-9);e.rest=Math.round((e.packungen*e.ve-e.menge)*1000)/1000;e.packpreis=e.preis*e.ve;e.kosten=e.packungen*e.packpreis}
+      else{e.packungen=0;e.rest=0;e.packpreis=0;e.kosten=e.preis*e.menge}
+      g.summe+=e.kosten;g.reste+=e.kosten-e.preis*e.menge;
+      if(e.preis<=0||e.menge<=0||!e.bestellnummer)g.unvollstaendig++;
+    });
+    g.positionen.sort((a,b)=>(a.bestellnummer.toLowerCase()+'\u0000'+a.datei.toLowerCase()).localeCompare(b.bestellnummer.toLowerCase()+'\u0000'+b.datei.toLowerCase()));
+  });
+  gs.sort((a,b)=>((a.lieferant==='Ohne Lieferant')-(b.lieferant==='Ohne Lieferant'))||(b.tage-a.tage)||a.lieferant.toLowerCase().localeCompare(b.lieferant.toLowerCase()));
+  return gs;
+}
+const baseName=s=>String(s||'').split(/[\\/]/).pop();
+const KATTXT={zukauf:'Zukauf',norm:'Norm',eigen:'Eigen',bg:'Baugruppe'};
+
+const BOM={}, BOMUI={};           // BOM[pid] = {data|null, mt}
+let BOMDIR=null;                  // {t, files:{name:{id,mt}}}
+const bomName=pid=>(String(pid||"unbekannt").replace(/[^A-Za-z0-9_.-]/g,"_").slice(0,64)||"unbekannt")+".json";
+function bomNorm(d,pid){
+  if(!d||typeof d!=="object")return null;
+  const out={projekt_id:d.projekt_id||pid,baugruppe:String(d.baugruppe||""),gelesen_am:String(d.gelesen_am||""),
+    beschaffung:d.beschaffung==="selbst"?"selbst":"kunde",positionen:[]};
+  (Array.isArray(d.positionen)?d.positionen:[]).forEach(p=>{
+    if(!p||typeof p!=="object")return;
+    const props={};Object.entries(p.props&&typeof p.props==="object"?p.props:{}).forEach(([k,v])=>props[k]=v==null?"":String(v));
+    const fn=String(p.filename||""),num=v=>{const n=parseFloat(v);return isFinite(n)&&n>0?n:null};
+    out.positionen.push({pos:String(p.pos??""),filename:fn,pfad:String(p.pfad||""),stem:String(p.stem||fn.replace(/\.[^.]*$/,"")),
+      is_asm:!!p.is_asm,qty:parseInt(p.qty)||1,qty_total:parseInt(p.qty_total??p.qty)||1,props,
+      auto_cm:num(p.auto_cm),auto_kg:num(p.auto_kg),auto_quelle:String(p.auto_quelle||""),
+      selbst:p.selbst===true||p.selbst===false?p.selbst:null});
+  });
+  return out;
+}
+async function bomListe(neu){
+  if(BOMDIR&&!neu&&Date.now()-BOMDIR.t<120000)return BOMDIR;
+  const vm=await ordnerFinden(); const files={};
+  if(vm){
+    const top=await ordnerLaden(vm);
+    const st=top.find(f=>f.mimeType===FOLDER&&f.name==="stueckliste");
+    if(st)(await ordnerLaden(st.id)).forEach(f=>{if(/\.json$/i.test(f.name))files[f.name]={id:f.id,mt:f.modifiedTime||""}});
+  }
+  BOMDIR={t:Date.now(),files};return BOMDIR;
+}
+async function bomHolen(pid,neu){
+  const dir=await bomListe(neu);
+  const e=dir.files[bomName(pid)];
+  if(!e){BOM[pid]={data:null,mt:""};return BOM[pid]}
+  if(BOM[pid]&&BOM[pid].mt===e.mt&&!neu)return BOM[pid];
+  const r=await api(`${API}/files/${e.id}?alt=media`);
+  BOM[pid]={data:bomNorm(JSON.parse((await r.text()).replace(/^﻿/,"")),pid),mt:e.mt};
+  return BOM[pid];
+}
+function bomAbschnitt(k,p){
+  return `<section class="sec"><h2>Stückliste</h2><div id="bomkarte">${bomKarte(k,p)}</div></section>`;
+}
+function bomKarte(k,p){
+  const m=BOM[p.id], key="bom:"+p.id;
+  if(!m){
+    if(driveBereit()&&!LADE[key]){
+      const neuZeichnen=html=>{const el=document.getElementById("bomkarte");if(el)el.innerHTML=html};
+      LADE[key]=bomHolen(p.id).then(()=>{delete LADE[key];neuZeichnen(bomKarte(k,p))})
+        .catch(()=>{delete LADE[key];neuZeichnen('<div class="list"><div class="empty">Stückliste konnte nicht geladen werden.</div></div>')});
+    }
+    return driveBereit()?'<div class="list"><div class="loading"><span class="spin"></span>Lade Stückliste …</div></div>':'<div class="list"><div class="empty">Zum Laden bei Google anmelden.</div></div>';
+  }
+  const d=m.data;
+  if(!d||!d.positionen.length)return `<div class="card"><p class="note">Für dieses Projekt ist noch keine Stückliste eingelesen${d?" (der letzte Abzug vom "+esc(d.gelesen_am)+" ist leer)":""}. Am PC: Projekt → Reiter „Konstruktion“ → „Einlesen“.</p></div>`;
+  const kz=bomKennzahlen(d);
+  return `<div class="card">
+    <div><div style="font-weight:600;overflow-wrap:anywhere">${esc(baseName(d.baugruppe)||"Hauptbaugruppe")}</div><p class="note">gelesen am ${esc(d.gelesen_am||"?")}</p></div>
+    <div class="stats"><div><small>Positionen</small><span class="num">${kz.positionen}</span></div><div><small>Teile · BG</small><span class="num">${kz.teile} · ${kz.baugruppen}</span></div>
+    <div><small>Materialwert</small><span class="num">${eur(kz.materialwert)}</span></div><div><small>Ohne Preis</small><span class="num" style="${kz.ohne_preis?"color:var(--warn)":""}">${kz.ohne_preis} von ${kz.teile}</span></div></div>
+    <p class="note">Längste Lieferzeit: ${kz.lz!=null?esc(kz.lzText||Math.round(kz.lz)+" Tage"):"—"} · Material: ${d.beschaffung==="selbst"?"ich beschaffe":"der Kunde beschafft"}</p>
+    <button class="btn" data-act="bom" data-pid="${esc(p.id)}">${ic("tabelle","s")}Stückliste öffnen</button></div>`;
+}
+function bomUi(pid){if(!BOMUI[pid])BOMUI[pid]={mode:"baum",filter:"alle",q:"",zu:new Set()};return BOMUI[pid]}
+function bomZeile(p,i,pid,zw,depth,kids,zu){
+  const kat=bKat(p),pr=bPreis(p),besch=bProp(p,"Beschreibung");
+  const meta=[besch&&besch!==p.stem?`<span>${esc(besch)}</span>`:"",kat&&kat!=="bg"?`<span class="pill k-${kat}">${esc(bProp(p,"Art")||KATTXT[kat])}</span>`:"",
+    bProp(p,"Material")?`<span>${esc(bProp(p,"Material"))}</span>`:"",bProp(p,"Lieferant")?`<span>${esc(bProp(p,"Lieferant"))}</span>`:""].filter(Boolean).join("");
+  let r;
+  if(p.is_asm){const z=zw[p.pos]||0;r=`<span class="num">${p.qty}×</span>${z>0?`<small class="num">Σ ${eur(z)}</small>`:""}`}
+  else if(pr>0)r=`<span class="num">${eur(pr*bMenge(p))}</span><small class="num">${esc(bMengeText(p))} × ${eur4(pr)}</small>`;
+  else r=`<span class="pill pausiert">kein Preis</span><small class="num">${esc(bMengeText(p))}</small>`;
+  const tog=kids?`<button class="btog${zu?"":" open"}" data-btog="${esc(p.pos)}" aria-label="${zu?"Aufklappen":"Zuklappen"}">${ic("chev","s")}</button>`:'<span class="btog"></span>';
+  return `<div class="brow${p.is_asm?" asm":""}${!p.is_asm&&pr<=0?" nop":""}" style="--d:${Math.max(0,Math.min(depth,6))}">${depth>=0?tog:""}<button class="bmain" data-act="teil" data-pid="${esc(pid)}" data-i="${i}">
+    <div class="main"><div class="t"><span class="bpos">${esc(p.pos)}</span>${esc(p.stem||p.filename)}</div>${meta?`<div class="m">${meta}</div>`:""}${bMassFehlt(p)?`<div class="m pend">Länge fehlt – gerechnet mit 1 ${esc(bEinheit(p))} je Stück</div>`:""}</div>
+    <div class="r">${r}</div></button></div>`;
+}
+function vBom(s){
+  const {k,p}=findP(s.pid); if(!p){back();return undefined}
+  header("Stückliste",p.nummer||one(p.name),`<button class="ib" data-act="bom-neu" aria-label="Neu laden">${ic("sync")}</button>`);
+  fab("");
+  if(s._fehler){const e=s._fehler;delete s._fehler;return fehlerKarte(e,s)}
+  const m=BOM[s.pid];
+  if(!m){if(!driveBereit())return fehlerKarte({code:"auth"},s);s._key="bomv:"+s.pid;ladenUndZeigen(s._key,()=>bomHolen(s.pid));return laedt("Lade Stückliste …")}
+  const d=m.data;
+  if(!d||!d.positionen.length)return '<div class="card"><p class="note">Keine Stückliste eingelesen. Am PC: Projekt → Reiter „Konstruktion“ → „Einlesen“.</p></div>';
+  const u=bomUi(s.pid),kz=bomKennzahlen(d),zw=bZwischen(d),pos=d.positionen;
+  const cnt={alle:pos.length,ohne:pos.filter(x=>!x.is_asm&&bPreis(x)<=0).length,kauf:pos.filter(x=>["zukauf","norm"].includes(bKat(x))).length,eigen:pos.filter(x=>bKat(x)==="eigen").length};
+  const top=`<div class="card" style="gap:6px"><div style="font-weight:600;overflow-wrap:anywhere">${esc(baseName(d.baugruppe))}</div>
+    <p class="note">gelesen am ${esc(d.gelesen_am||"?")} · ${kz.positionen} Positionen · Materialwert <span class="num">${eur(kz.materialwert)}</span>${kz.ohne_preis?` · <span class="pend">${kz.ohne_preis} ohne Preis</span>`:""}</p>
+    <div class="seg"><button class="${u.mode==="baum"?"on":""}" data-bmode="baum">Stückliste</button><button class="${u.mode==="lief"?"on":""}" data-bmode="lief">Nach Lieferant</button></div></div>`;
+  if(u.mode==="lief"){
+    const gs=bomGruppen(d),reste=gs.reduce((a,g)=>a+g.reste,0),vor=Math.max(0,...gs.map(g=>g.tage));
+    if(!gs.length)return top+'<div class="list"><div class="empty">Keine zu bestellenden Positionen.</div></div>';
+    return top+(vor>0?`<p class="note">Längste Lieferzeit <b>${esc(lzText(vor))}</b> – so früh muss die erste Bestellung raus.</p>`:"")
+      +gs.map(g=>`<section class="sec"><h2>${esc(g.lieferant)} <span class="n">${eur(g.summe)}</span></h2>
+        <p class="note">${g.positionen.length} Position${g.positionen.length===1?"":"en"} · Lieferzeit ${esc(lzText(g.tage))}${g.unvollstaendig?` · <span class="pend">${g.unvollstaendig} unvollständig</span>`:""}</p>
+        <div class="list">${g.positionen.map(e=>{
+          const nr=e.bestellnummer||"";
+          const menge=e.packungen?`<b>${e.packungen} Pkg</b> à ${esc(fmtMenge(e.ve))} ${esc(e.einheit)} · Bedarf ${esc(fmtMenge(e.menge))}${e.rest>0?" · übrig "+esc(fmtMenge(e.rest)):""}`:`${esc(fmtMenge(e.menge))} ${esc(e.einheit)}`;
+          const preis=e.preis>0?(e.packungen?`${eur4(e.packpreis)}/Pkg`:`${eur4(e.preis)}/${esc(e.einheit)}`):'<span class="pend">kein Preis</span>';
+          return `<button class="row${e.preis<=0||!nr?" nop":""}" data-act="teil" data-pid="${esc(s.pid)}" data-i="${e.i}"><div class="main"><div class="t">${nr?esc(nr):'<span class="pend">ohne Bestellnummer</span>'}</div>
+            <div class="m"><span>${esc(e.beschreibung&&e.beschreibung!==nr?e.beschreibung:e.stem)}</span><span>Pos. ${esc(e.pos)}</span></div>
+            <div class="m">${menge} · ${preis}</div></div><div class="r"><span class="num">${e.preis>0?eur(e.kosten):"—"}</span></div></button>`}).join("")}
+        <div class="kalk"><div class="sum"><span>Summe</span><span class="num">${eur(g.summe)}</span></div></div></div></section>`).join("")
+      +(reste>0.005?`<p class="note">Davon ${eur(reste)} für Reste in angebrochenen Packungen.</p>`:"");
+  }
+  const chips=[["alle","Alle"],["ohne","Ohne Preis"],["kauf","Zukauf + Norm"],["eigen","Eigenfertigung"]]
+    .map(([f,l])=>`<button class="chip${u.filter===f?" on":""}" data-bfilter="${f}">${l} ${cnt[f]}</button>`).join("");
+  const q=u.q.trim().toLowerCase(), flach=u.filter!=="alle"||q;
+  let zeilen="";
+  if(flach){
+    const ok=x=>u.filter==="ohne"?!x.is_asm&&bPreis(x)<=0:u.filter==="kauf"?["zukauf","norm"].includes(bKat(x)):u.filter==="eigen"?bKat(x)==="eigen":true;
+    const hit=x=>!q||[x.pos,x.stem,x.filename,...["Beschreibung","Bestellnummer","Lieferant","Material","Hersteller","Herstellernummer","Art"].map(f=>bProp(x,f))].join(" ").toLowerCase().includes(q);
+    zeilen=pos.map((x,i)=>ok(x)&&hit(x)?bomZeile(x,i,s.pid,zw,-1,false,false):"").join("");
+  }else{
+    const eltern=new Set(pos.map(x=>bEltern(x.pos)));
+    const versteckt=x=>{let e=bEltern(x.pos);while(e){if(u.zu.has(e))return true;e=bEltern(e)}return false};
+    zeilen=pos.map((x,i)=>versteckt(x)?"":bomZeile(x,i,s.pid,zw,x.pos.split(".").length-1,x.is_asm&&eltern.has(x.pos),u.zu.has(x.pos))).join("");
+  }
+  const asms=pos.filter(x=>x.is_asm).length;
+  return top+`<label class="search">${ic("suchen","s")}<input id="bq" type="search" placeholder="Nummer, Beschreibung, Lieferant …" value="${esc(u.q)}" autocomplete="off"></label>
+    <div class="chips">${chips}</div>
+    ${!flach&&asms?`<div class="btnrow" style="justify-content:flex-end;margin:-6px 2px -8px"><button class="linkbtn" data-act="bom-auf">Alle auf</button><button class="linkbtn" data-act="bom-zu">Alle zu</button></div>`:""}
+    <div class="list btree">${zeilen||'<div class="empty">Keine Positionen.</div>'}</div>
+    <div class="list kalk"><div class="sum"><span>Materialwert</span><span class="num">${eur(kz.materialwert)}</span></div></div>
+    <p class="note">Materialwert = Stückpreis × Gesamtmenge aller Einzelteile (+ Fertigungskosten der Baugruppen). Baugruppen zeigen die Summe ihrer Teile je Stück (Σ).</p>`;
+}
+const PROP_ORDER=["Beschreibung","Art","Bauteilnummer","Bestellnummer","Hersteller","Herstellernummer","Lieferant","Lieferzeit","Material","Oberfläche","Oberflächenbehandlung","Fertigung","Baureihe","Hauptmaß","Einheit","Länge","Maß","VE","Packungspreis","Preis","Fertigungskosten"];
+// Wie fertigung.zeichnung_finden: PDF „<stem>.pdf“, sonst die neueste, die mit dem Stamm beginnt.
+// Gesucht wird im Projektordner und zwei Ebenen darunter.
+async function zeichnungFinden(p,stem){
+  if(!p.ordner||!drivePfad(p.ordner))return {zustand:"keinordner"};
+  const fid=await pfadAufloesen(p.ordner); if(!fid)return {zustand:"keinordner"};
+  const s=String(stem).toLowerCase();
+  const wahl=l=>{const pdf=l.filter(f=>f.mimeType!==FOLDER&&/\.pdf$/i.test(f.name));
+    return pdf.find(f=>f.name.toLowerCase()===s+".pdf")||pdf.filter(f=>f.name.toLowerCase().startsWith(s)).sort((a,b)=>String(b.modifiedTime||"").localeCompare(String(a.modifiedTime||"")))[0]||null};
+  const top=LISTE[fid]||await ordnerLaden(fid);
+  let f=wahl(top);if(f)return {zustand:"ok",f};
+  for(const sub of top.filter(x=>x.mimeType===FOLDER).slice(0,20)){
+    const l=LISTE[sub.id]||await ordnerLaden(sub.id);f=wahl(l);if(f)return {zustand:"ok",f,wo:sub.name};
+    for(const sub2 of l.filter(x=>x.mimeType===FOLDER).slice(0,10)){
+      const l2=LISTE[sub2.id]||await ordnerLaden(sub2.id);f=wahl(l2);if(f)return {zustand:"ok",f,wo:sub.name+" / "+sub2.name}}
+  }
+  return {zustand:"keine",stem};
+}
+function vTeil(s){
+  const {k,p}=findP(s.pid), m=BOM[s.pid]; const d=m&&m.data, t=d&&d.positionen[s.i];
+  if(!t){back();return undefined}
+  header(t.stem||t.filename,(t.is_asm?"Baugruppe":KATTXT[bKat(t)]||"Teil")+" · Pos. "+t.pos);
+  fab("");
+  const zw=bZwischen(d),preis=bPreis(t);
+  const kv=(a,b)=>`<div class="kv"><span>${esc(a)}</span><span>${b}</span></div>`;
+  const z=[kv("Position",esc(t.pos)),kv("Menge in der Baugruppe",t.qty+"×"),kv("Gesamt im Projekt",t.qty_total+"×")];
+  if(!t.is_asm){
+    if(bMeter(t)){const qq=bMassQuelle(t);z.push(kv("Länge je Stück",bMassFehlt(t)?'<span class="pend">fehlt – gerechnet mit 1</span>':esc(fmtMenge(bMassJe(t))+" "+bEinheit(t))+(qq?` <small style="color:var(--dim)">(aus ZW3D, ${esc(qq)})</small>`:"")))}
+    z.push(kv("Bedarf",esc(bMengeText(t))));
+    z.push(kv(bMeter(t)?"Preis je "+bEinheit(t):"Stückpreis",preis>0?eur4(preis):'<span class="pend">kein Preis</span>'));
+    if(preis>0)z.push(kv("Summe",`<b>${eur(preis*bMenge(t))}</b>`));
+    const ve=zahlWert(bProp(t,"VE"),0);
+    if(ve>1)z.push(kv("Packungen",`${Math.ceil(bMenge(t)/ve-1e-9)} × VE ${esc(fmtMenge(ve))}`));
+    z.push(kv("Wer bezahlt",bSelbst(t,d.beschaffung)?"ich selbst":"der Kunde"));
+  }else{
+    const n=d.positionen.filter(x=>bEltern(x.pos)===t.pos).length;
+    z.push(kv("Enthält",n+" Position"+(n===1?"":"en")));
+    if(zw[t.pos]>0)z.push(kv("Summe je Stück",eur(zw[t.pos])));
+  }
+  const keys=Object.keys(t.props).filter(x=>String(t.props[x]).trim()&&x!=="Preis")
+    .sort((a,b)=>{const ia=PROP_ORDER.indexOf(a),ib=PROP_ORDER.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b)});
+  setTimeout(async()=>{
+    const ziel=()=>document.getElementById("tdz");
+    if(!ziel())return;
+    if(!driveBereit()){ziel().innerHTML='<div class="empty">Zum Suchen der Zeichnung bei Google anmelden.</div>';return}
+    try{
+      const r=await zeichnungFinden(p,t.stem||t.filename.replace(/\.[^.]*$/,""));
+      const el=ziel();if(!el)return;
+      if(r.zustand==="keinordner")el.innerHTML='<div class="empty">Das Projekt hat keinen Ordner auf Google Drive.</div>';
+      else if(r.zustand==="keine")el.innerHTML=`<div class="empty">Keine PDF „${esc(r.stem)}…“ im Projektordner gefunden.</div>`;
+      else el.innerHTML=`<button class="row" data-act="pdf" data-fid="${esc(r.f.id)}" data-titel="${esc(r.f.name)}" data-link="${esc(driveLink(r.f))}"><span class="ftyp pdf">${ic("pdf","s")}</span><div class="main"><div class="t" style="white-space:normal">${esc(r.f.name)}</div><div class="m">${esc([datum(r.f.modifiedTime),r.wo].filter(Boolean).join(" · "))}</div></div><span class="btn small">Öffnen</span></button>`;
+    }catch(e){const el=ziel();if(el)el.innerHTML=`<div class="empty">${esc(fehlerText(e))}</div>`}
+  },0);
+  return `<section class="sec"><h2>Zeichnung</h2><div class="list" id="tdz"><div class="loading"><span class="spin"></span>Suche Zeichnung …</div></div></section>
+    <div class="card" style="gap:8px">${z.join("")}</div>
+    ${keys.length?`<section class="sec"><h2>Eigenschaften</h2><div class="card" style="gap:8px">${keys.map(x=>kv(x,esc(t.props[x]))).join("")}</div></section>`:""}
+    <section class="sec"><h2>Datei</h2><div class="card"><div style="font-weight:600;overflow-wrap:anywhere">${esc(t.filename)}</div>${t.pfad?`<div class="note" style="overflow-wrap:anywhere">${esc(t.pfad)}</div>`:""}</div></section>`;
 }
 
 // ═════════════════════════ Formulare ═════════════════════════
@@ -916,7 +1474,7 @@ function render(scrollTop){
   const s=stack[stack.length-1];let html="";
   try{
     if(s.v==="start")html=vStart();else if(s.v==="kunden")html=vKunden();else if(s.v==="kunde")html=vKunde(s.kid);
-    else if(s.v==="projekt")html=vProjekt(s.pid);else if(s.v==="zeiten")html=vZeiten();else if(s.v==="umsatz")html=vUmsatz();else if(s.v==="sync")html=vSync();
+    else if(s.v==="projekt")html=vProjekt(s.pid);else if(s.v==="zeiten")html=vZeiten();else if(s.v==="projekte")html=vProjekte();else if(s.v==="ordner")html=vOrdner(s);else if(s.v==="pdf")html=vPdf(s);else if(s.v==="bild")html=vBild(s);else if(s.v==="suche")html=vSuche(s);else if(s.v==="bom")html=vBom(s);else if(s.v==="teil")html=vTeil(s);else if(s.v==="umsatz")html=vUmsatz();else if(s.v==="sync")html=vSync();
   }catch(e){html=`<div class="card"><b>Die Daten konnten nicht angezeigt werden.</b><p class="note">${esc(e.message)}</p></div>`;console.error(e)}
   if(html!==undefined)document.getElementById("view").innerHTML=html;
   zeichneStatus();
@@ -938,17 +1496,33 @@ document.addEventListener("click",ev=>{
   if(d.act==="kunde-neu"){kundeForm(null);return}
   if(d.act==="kunde-edit"){kundeForm(d.kid);return}
   if(d.act==="projekt-edit"){projektForm({pid:d.pid});return}
+  if(d.act==="ordner"){if(b.disabled)return;go({v:"ordner",fid:d.fid||"",pfad:d.pfad||null,titel:d.titel||"",sub:d.sub||""});return}
+  if(d.act==="pdf"){go({v:"pdf",fid:d.fid,titel:d.titel,link:d.link});return}
+  if(d.act==="bild"){go({v:"bild",fid:d.fid,titel:d.titel,link:d.link});return}
+  if(d.act==="suche"){go({v:"suche",text:""});return}
+  if(d.act==="bom"){go({v:"bom",pid:d.pid});return}
+  if(d.act==="teil"){go({v:"teil",pid:d.pid,i:+d.i});return}
+  if(d.act==="bom-neu"){const s=stack[stack.length-1];BOMDIR=null;delete BOM[s.pid];render();return}
+  if(d.act==="bom-auf"||d.act==="bom-zu"){const s=stack[stack.length-1],u=bomUi(s.pid);u.zu=new Set();if(d.act==="bom-zu")((BOM[s.pid]||{}).data||{positionen:[]}).positionen.forEach(x=>{if(x.is_asm)u.zu.add(x.pos)});render();return}
+  if(d.bmode){const s=stack[stack.length-1];bomUi(s.pid).mode=d.bmode;render();return}
+  if(d.bfilter){const s=stack[stack.length-1];bomUi(s.pid).filter=d.bfilter;render();return}
+  if(d.btog!=null){const s=stack[stack.length-1],z=bomUi(s.pid).zu;z.has(d.btog)?z.delete(d.btog):z.add(d.btog);render();return}
+  if(d.act==="zoom"){const s=stack[stack.length-1];s.zoom=Math.min(4,Math.max(0.5,(s.zoom||1)*(+d.d>0?1.4:1/1.4)));if(s.v==="pdf"){const z=document.getElementById("zt");if(z)z.textContent=Math.round(s.zoom*100)+" %";pdfZeichnen(s)}else render();return}
+  if(d.act==="neu-laden"){const s=stack[stack.length-1];if(s.fid){delete LISTE[s.fid];delete PDFDOC[s.fid];delete BILD[s.fid]}if(s.v==="suche")s.erg=null;render();return}
+  if(d.act==="pfad-neu"){const s=stack[stack.length-1];delete PFADID[s.pfad];render();return}
   if(d.jahr){umsatzJahr=+d.jahr;render();return}
   if(d.taskToggle){const k=d.taskToggle;openTasks.has(k)?openTasks.delete(k):openTasks.add(k);b.parentElement.classList.toggle("open");b.setAttribute("aria-expanded",openTasks.has(k));return}
   if(d.go){go({v:d.go,kid:d.kid,pid:d.pid})}
 });
 document.addEventListener("input",ev=>{
-  if(ev.target.id==="zq"||ev.target.id==="kq"){
-    if(ev.target.id==="zq")zeitQ=ev.target.value;else kundenQ=ev.target.value;
+  if(ev.target.id==="zq"||ev.target.id==="kq"||ev.target.id==="bq"){
+    if(ev.target.id==="zq")zeitQ=ev.target.value;else if(ev.target.id==="bq")bomUi(stack[stack.length-1].pid).q=ev.target.value;else kundenQ=ev.target.value;
     const id=ev.target.id,pos=ev.target.selectionStart;render();
     const el=document.getElementById(id);el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}
   }
 });
+document.addEventListener("keydown",ev=>{if(ev.key==="Enter"&&ev.target&&ev.target.id==="dq"){ev.preventDefault();sucheStarten(ev.target.value);ev.target.blur()}});
+document.addEventListener("search",ev=>{if(ev.target&&ev.target.id==="dq")sucheStarten(ev.target.value)},true);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)nachschauen()});
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&SHEET)schliessen()});
 
